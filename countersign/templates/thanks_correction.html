@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Correction received — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Correction received</div>
+<h1>Nothing will publish.</h1>
+<p class="sub">Thank you. The claim goes back to {{ claim.vendor.name }} with your correction,
+and it cannot appear on the record unless you confirm a corrected version.</p>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Already handled — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Nothing to do</div>
+<h1>This request has already been handled.</h1>
+<p class="sub">{% if claim.state == 'confirmed' %}These facts were confirmed on {{ claim.resolved_at.strftime('%d %b %Y') }}. The record is live.{% else %}This request was closed. If you were expecting to confirm something, ask {{ claim.vendor.name }} to send a fresh link.{% endif %}</p>
+{% if claim.state == 'confirmed' %}<a class="btn ghost" href="/r/{{ claim.vendor.slug }}">See the public record</a>{% endif %}
+{% endblock %}

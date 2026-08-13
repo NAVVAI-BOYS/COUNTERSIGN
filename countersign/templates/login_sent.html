@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Check your email — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Sign in</div>
+<h1>Check your email.</h1>
+<p class="sub">If {{ email }} is on the register, a one time sign in link is on its way. It works once and expires when used.</p>
+{% if demo_link %}
+<div class="panel" style="border-color:var(--seal)">
+  <div class="mono" style="color:var(--seal);margin-bottom:6px">Pre launch mode</div>
+  <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-soft)">Email sending isn't configured yet, so here's your link directly:</p>
+  <a class="btn" href="{{ demo_link }}">Sign in</a>
+</div>
+{% endif %}
+{% endblock %}

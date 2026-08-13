@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Get certified — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Founding cohort</div>
+<h1>Apply for founding membership.</h1>
+<p class="sub">The register opens with its founding members. Free, founding number for life. Onboarding is a short call with us, or a five minute form if you would rather do it yourself. Either way your client confirms in one click before anything publishes.</p>
+<form method="post" action="/signup" class="panel" style="max-width:560px">
+  <label for="company">Company</label>
+  <input type="text" id="company" name="company" required>
+  <label for="name">Your name</label>
+  <input type="text" id="name" name="name" required>
+  <label for="email">Work email</label>
+  <input type="email" id="email" name="email" required>
+  <label for="sells">What do you sell, and to whom? (one line)</label>
+  <input type="text" id="sells" name="sells" placeholder="Lead generation for US manufacturing companies">
+  <button class="btn" style="margin-top:16px" type="submit">Request an invitation</button>
+</form>
+<p class="sub" style="font-size:13px">We reply personally within two working days. Certification is never guaranteed: claims are checked, and some are rejected.</p>
+{% endblock %}

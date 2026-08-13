@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Admin — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Admin</div>
+<h1>The register, behind the desk.</h1>
+<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">
+  <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Confirmed</div><div style="font-size:26px;font-weight:600">{{ confirmed }}</div></div>
+  <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Awaiting</div><div style="font-size:26px;font-weight:600">{{ pending }}</div></div>
+  <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Corrections</div><div style="font-size:26px;font-weight:600;{% if corrected %}color:var(--seal){% endif %}">{{ corrected }}</div></div>
+</div>
+
+{% if disputes %}
+<div class="mono" style="margin:6px 0 10px;color:var(--seal)">Open challenges</div>
+{% for d in disputes %}
+<div class="panel" style="border-color:var(--seal)">
+  <strong>{{ d.claim_no }}</strong> · {{ d.name }} ({{ d.email }}){% if d.company %} · {{ d.company }}{% endif %}
+  <p style="margin:8px 0;font-size:14px">{{ d.detail }}</p>
+  <form method="post" action="/admin/dispute/{{ d.id }}/handled"><button class="btn ghost" type="submit">Mark handled</button></form>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if invites %}
+<div class="mono" style="margin:6px 0 10px">Invitation requests</div>
+{% for i in invites %}
+<div class="panel" style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;border-color:var(--seal)">
+  <div>
+    <strong>{{ i.company }}</strong> · {{ i.name }} · {{ i.email }}
+    {% if i.sells %}<div style="font-size:13px;color:var(--ink-soft)">{{ i.sells }}</div>{% endif %}
+    <div class="mono" style="margin-top:4px">{{ i.created_at.strftime('%d %b %Y') }}</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <form method="post" action="/admin/invite/{{ i.id }}/approve"><button class="btn" type="submit">Approve, create onboarding link</button></form>
+    <form method="post" action="/admin/invite/{{ i.id }}/handled"><button class="btn ghost" type="submit">Dismiss</button></form>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:10px">Add a vendor</div>
+  <form method="post" action="/admin/vendor">
+    <label>Company name</label><input type="text" name="name" required>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 200px"><label>Website</label><input type="url" name="website" placeholder="https://"></div>
+      <div style="flex:1 1 160px"><label>Company number</label><input type="text" name="company_no"></div>
+      <div style="flex:1 1 220px"><label>Contact email (for their sign in)</label><input type="email" name="contact_email"></div>
+    </div>
+    <label>One line description</label><input type="text" name="blurb">
+    <button class="btn" style="margin-top:14px" type="submit">Add vendor</button>
+  </form>
+</div>
+
+<div class="mono" style="margin:22px 0 10px">Vendors</div>
+{% for v in vendors %}
+<a href="/admin/vendor/{{ v.id }}" style="text-decoration:none;color:inherit">
+<div class="panel" style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+  <div><strong>{{ v.name }}</strong> <span class="mono" style="margin-left:8px">{{ v.record_no }}</span></div>
+  <div style="font-size:13px;color:var(--ink-soft)">{{ v.claims|length }} claim{{ '' if v.claims|length==1 else 's' }}</div>
+</div></a>
+{% else %}
+<p class="sub">No vendors yet. Add the first one above — Navvai is customer zero.</p>
+{% endfor %}
+{% endblock %}

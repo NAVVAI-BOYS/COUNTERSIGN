@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Submitted — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Submitted</div>
+<h1>{{ added }} claim{{ '' if added == 1 else 's' }} in review.</h1>
+<p class="sub">Thanks, {{ vendor.name }} is on its way onto the register. We review each claim against
+<a href="/standard">the published standard</a>, then your client gets a one click confirmation link.
+You'll hear from us either way, usually within two working days.</p>
+<div class="panel">
+  <div class="mono" style="margin-bottom:8px">What happens next</div>
+  <ul style="margin:0;padding-left:18px;font-size:14.5px;color:var(--ink-soft);display:grid;gap:6px">
+    <li>We review and grade each claim. Where evidence exists, we'll ask to see it, then delete it.</li>
+    <li>Your client receives the confirmation link. Nothing publishes unless they confirm.</li>
+    <li>Your record goes live at your founding number, {{ vendor.record_no }}, with a proof page and badge.</li>
+  </ul>
+</div>
+<a class="btn" href="/portal">Go to your record</a>
+{% endblock %}

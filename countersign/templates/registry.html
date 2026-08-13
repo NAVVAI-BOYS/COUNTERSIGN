@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="eyebrow">The open register</div>
+<h1>Countersigned records.</h1>
+<p class="sub">Every claim here was confirmed by the named client before it published. Facts only, never opinions.</p>
+{% if vendors %}
+{% for v in vendors %}
+<a href="/r/{{ v.slug }}" style="text-decoration:none;color:inherit">
+<div class="panel" style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+  <div>
+    <div style="font-weight:600;font-size:16.5px">{{ v.name }}</div>
+    <div style="font-size:13px;color:var(--ink-soft)">{{ v.blurb }}</div>
+  </div>
+  <div class="mono">{{ v.record_no }}</div>
+</div></a>
+{% endfor %}
+{% else %}
+<div class="panel"><p style="margin:0;color:var(--ink-soft)">The register opens with its founding members shortly. Every record you will see here has been countersigned by the named client.</p></div>
+{% endif %}
+{% endblock %}

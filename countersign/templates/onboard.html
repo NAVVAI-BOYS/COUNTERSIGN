@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Onboarding — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Member onboarding &nbsp;·&nbsp; {{ vendor.record_no }}</div>
+<h1>Welcome, {{ vendor.name }}.</h1>
+<p class="sub">Five minutes: your company details, then the claims you actually use in sales.
+We review everything before anything moves, your client confirms before anything publishes,
+and nothing negative can ever be recorded.</p>
+
+<form method="post">
+  <div class="panel">
+    <div class="mono" style="margin-bottom:8px">Your company</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px"><label>Website</label><input type="url" name="website" value="{{ vendor.website }}" placeholder="https://"></div>
+      <div style="flex:1 1 160px"><label>Company number (optional)</label><input type="text" name="company_no" value="{{ vendor.company_no }}"></div>
+    </div>
+    <label>One line on what you do</label>
+    <input type="text" name="blurb" value="{{ vendor.blurb }}" placeholder="AI growth consultancy, United Kingdom">
+  </div>
+
+  {% for i in [1, 2, 3] %}
+  <div class="panel">
+    <div class="mono" style="margin-bottom:4px">Claim {{ i }}{% if i > 1 %} <span style="text-transform:none;letter-spacing:0">(optional)</span>{% endif %}</div>
+    <label>The claim, as you'd say it in a sales conversation</label>
+    <textarea name="claim{{ i }}_text" placeholder="We've worked with Netformic since February 2025, running their outbound lead generation. They've renewed once and the engagement is ongoing."></textarea>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 200px"><label>Which client</label><input type="text" name="claim{{ i }}_client"></div>
+      <div style="flex:1 1 260px"><label>Who confirms it (their work email)</label><input type="email" name="claim{{ i }}_email" placeholder="name@client.com"></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px"><label>How long, roughly</label><input type="text" name="claim{{ i }}_relationship" placeholder="Client since Feb 2025, renewed once"></div>
+      <div style="flex:1 1 200px"><label>What the work covers</label><input type="text" name="claim{{ i }}_scope" placeholder="Outbound lead generation"></div>
+      <div style="flex:1 1 120px"><label>Status</label><input type="text" name="claim{{ i }}_status" placeholder="Ongoing"></div>
+    </div>
+    <label>What evidence do you have, if any? (contract, invoices, usage data, or nothing formal — all fine)</label>
+    <input type="text" name="claim{{ i }}_evidence" placeholder="Signed agreement plus 18 months of invoices">
+  </div>
+  {% endfor %}
+
+  <div class="panel" style="border-color:var(--seal)">
+    <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft)">When you submit, we review and grade each claim against
+    <a href="/standard">the published standard</a>, then your client gets a one click confirmation link.
+    Nothing publishes unless they confirm it.</p>
+    <button class="btn" type="submit">Submit for review</button>
+  </div>
+</form>
+{% endblock %}

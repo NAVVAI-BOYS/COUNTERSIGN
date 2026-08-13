@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Challenge a record — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Dispute</div>
+<h1>Challenge a record.</h1>
+<p class="sub">If a claim on this register is wrong, tell us. Disputed claims are investigated, and claims that do not hold up are removed. This is part of <a href="/standard">the standard</a>.</p>
+<form method="post" class="panel" style="max-width:560px">
+  <label for="claim_no">Claim number (e.g. CS-0001-01)</label>
+  <input type="text" id="claim_no" name="claim_no" value="{{ claim_no }}" style="font-family:'Courier Prime',monospace">
+  <label for="name">Your name</label>
+  <input type="text" id="name" name="name" required>
+  <label for="email">Your work email</label>
+  <input type="email" id="email" name="email" required>
+  <label for="company">Your company (optional)</label>
+  <input type="text" id="company" name="company">
+  <label for="detail">What is wrong, specifically?</label>
+  <textarea id="detail" name="detail" required></textarea>
+  <button class="btn" style="margin-top:14px" type="submit">Submit the challenge</button>
+</form>
+<p class="sub" style="font-size:13px">We reply within two working days. Challenges are handled on facts, never opinions, and malicious challenges are recorded as such.</p>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Confirmed — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Done</div>
+<h1>Confirmed. Thank you.</h1>
+<p class="sub">The facts you confirmed are now on the record for {{ claim.vendor.name }},
+marked as confirmed by {% if claim.show_confirmer %}{{ claim.confirmer_name }}, {{ claim.confirmer_role }} at {{ claim.client_company }}{% else %}a verified client, privately{% endif %} on {{ claim.resolved_at.strftime('%d %b %Y') }}.</p>
+<div class="panel">
+  <div class="mono" style="margin-bottom:8px">What happens now</div>
+  <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">The record is public and checkable at any time.
+  Nothing about your company can ever be added without you confirming it first, and nothing negative is ever recorded.
+  If anything changes, reply to the original email and the record gets corrected.</p>
+</div>
+<a class="btn ghost" href="/r/{{ claim.vendor.slug }}">See the public record</a>
+{% endblock %}

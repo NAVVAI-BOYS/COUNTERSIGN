@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Confirm the facts — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">{{ claim.vendor.name }} has asked you to confirm</div>
+<h1>30 seconds. Facts only.</h1>
+<p class="sub">{{ claim.vendor.name }} wants to put the facts below on the public record.
+Nothing publishes unless you confirm it is accurate. You are never asked for an opinion,
+and nothing negative can ever be recorded about you or your company.</p>
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:10px">The claim &nbsp;·&nbsp; {{ claim.claim_no }}</div>
+  <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:18px;line-height:1.5;margin:0 0 14px">{{ claim.text }}</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr><td class="mono" style="padding:6px 14px 6px 0;white-space:nowrap;vertical-align:top">Client</td><td style="padding:6px 0">{{ claim.client_company }}</td></tr>
+    {% if claim.relationship_line %}<tr><td class="mono" style="padding:6px 14px 6px 0;vertical-align:top">Relationship</td><td style="padding:6px 0">{{ claim.relationship_line }}</td></tr>{% endif %}
+    {% if claim.scope_line %}<tr><td class="mono" style="padding:6px 14px 6px 0;vertical-align:top">Scope</td><td style="padding:6px 0">{{ claim.scope_line }}</td></tr>{% endif %}
+    {% if claim.status_line %}<tr><td class="mono" style="padding:6px 14px 6px 0;vertical-align:top">Status</td><td style="padding:6px 0">{{ claim.status_line }}</td></tr>{% endif %}
+  </table>
+</div>
+
+<form method="post" class="panel" id="confirmForm">
+  <div class="mono" style="margin-bottom:6px">Who is confirming</div>
+  <p class="sub" style="font-size:13.5px;margin-bottom:4px">Your name appears beside the confirmation so anyone reading the record can see exactly who stood behind it.</p>
+  <label for="name">Your name</label>
+  <input type="text" id="name" name="name" required>
+  <label for="role">Your role at {{ claim.client_company }}</label>
+  <input type="text" id="role" name="role" required>
+  <label for="linkedin">Your LinkedIn profile (optional, shown beside the confirmation)</label>
+  <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/...">
+  <label style="display:flex;gap:9px;align-items:flex-start;margin-top:14px;font-size:14px;color:var(--ink)">
+    <input type="checkbox" name="show_confirmer" value="yes" checked style="width:auto;margin-top:3px">
+    <span>Show my name and role on the public record. Untick to confirm privately: the claim still counts, your company is not named.</span>
+  </label>
+  <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+    <button class="btn" type="submit" name="action" value="confirm">Confirm these facts</button>
+    <button class="btn ghost" type="button" onclick="document.getElementById('correctionBox').style.display='block';this.style.display='none'">Something's not right</button>
+  </div>
+  <div id="correctionBox" style="display:none;margin-top:16px">
+    <label for="correction">Tell us what's wrong. The claim goes back to {{ claim.vendor.name }} to fix, and nothing publishes.</label>
+    <textarea id="correction" name="correction"></textarea>
+    <button class="btn ghost" type="submit" name="action" value="correct" style="margin-top:10px">Send correction</button>
+  </div>
+</form>
+
+<p class="sub" style="font-size:13px">Confirmed from this email address: <strong style="color:var(--ink)">{{ claim.confirmer_email }}</strong>.
+{{ brand }} records facts only. No ratings, no reviews, nothing negative, ever.</p>
+{% endblock %}

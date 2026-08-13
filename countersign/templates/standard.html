@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}The standard — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">The published standard</div>
+<h1>What the grades mean.</h1>
+<p class="sub">Applied the same way every time, to every company, including ours.</p>
+<div class="panel">
+  <span class="grade"><span class="dot"></span>Fully Verified</span>
+  <p style="margin:10px 0 0;font-size:14.5px;color:var(--ink-soft)">The named client confirmed the facts, supporting documents were checked, and payment records confirm the relationship and how long it has run.</p>
+</div>
+<div class="panel">
+  <span class="grade t2"><span class="dot"></span>Evidence Verified</span>
+  <p style="margin:10px 0 0;font-size:14.5px;color:var(--ink-soft)">The named client confirmed the facts, and supporting documents such as contracts or statements of work were checked.</p>
+</div>
+<div class="panel">
+  <span class="grade t3"><span class="dot"></span>Client Confirmed</span>
+  <p style="margin:10px 0 0;font-size:14.5px;color:var(--ink-soft)">The named client confirmed the facts from a company email address. No supporting documents were provided, and the record says so plainly.</p>
+</div>
+<div class="panel">
+  <div class="mono" style="margin-bottom:8px">Rules that never bend</div>
+  <ul style="margin:0;padding-left:18px;font-size:14.5px;color:var(--ink-soft);display:grid;gap:6px">
+    <li>Facts only. Opinions, ratings and reviews are never recorded.</li>
+    <li>Nothing publishes unless the named client confirms it.</li>
+    <li>Results claims publish only with the method shown: what was measured, over what period, against what baseline. No method, no publication.</li>
+    <li>Nothing negative is ever recorded about anyone.</li>
+    <li>Evidence is read, graded, then deleted. Client documents are never stored.</li>
+    <li>Claims are rejected where the client will not confirm or the facts do not match the evidence. Rejection figures are published quarterly.</li>
+  </ul>
+</div>
+{% endblock %}

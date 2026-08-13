@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ vendor.name }} — admin | {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow"><a href="/admin" style="border:none">Admin</a> · {{ vendor.record_no }}</div>
+<h1>{{ vendor.name }}</h1>
+<p class="sub">{{ vendor.blurb }} {% if vendor.claims|selectattr("state","equalto","confirmed")|list %}· <a href="/r/{{ vendor.slug }}">public record</a>{% endif %}</p>
+
+{% if vendor.onboard_token %}
+<div class="panel" style="border-color:var(--seal)">
+  <div class="mono" style="margin-bottom:8px;color:var(--seal)">Onboarding link, waiting to be sent</div>
+  <p style="margin:0 0 8px;font-size:13.5px;color:var(--ink-soft)">Send this to your contact. They fill in their claims themselves, five minutes, and everything lands here for your review. Single use.</p>
+  <input type="text" readonly value="{{ base_url }}/onboard/{{ vendor.onboard_token }}" onclick="this.select()" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+  <details style="margin-top:10px">
+    <summary class="mono" style="cursor:pointer;color:var(--seal)">Email to copy</summary>
+    <textarea readonly style="min-height:170px;font-family:'IBM Plex Mono',monospace;font-size:12.5px" onclick="this.select()">{{ onboard_email }}</textarea>
+  </details>
+</div>
+{% else %}
+<form method="post" action="/admin/vendor/{{ vendor.id }}/onboard-link" style="margin-bottom:16px">
+  <button class="btn ghost" type="submit">Generate onboarding link (they fill it in themselves)</button>
+</form>
+{% endif %}
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:10px">Draft a claim</div>
+  <form method="post" action="/admin/vendor/{{ vendor.id }}/claim">
+    <label>The claim, as it will appear on the record</label>
+    <textarea name="text" required placeholder="Netformic engaged Navvai to run outbound lead generation into the US Midwest manufacturing market..."></textarea>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px"><label>Client company</label><input type="text" name="client_company" required></div>
+      <div style="flex:1 1 260px"><label>Confirmer email (their business address)</label><input type="email" name="confirmer_email" required></div>
+    </div>
+    <label>Relationship line</label><input type="text" name="relationship_line" placeholder="Client since February 2025 · 18 months · renewed once">
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 260px"><label>Scope line</label><input type="text" name="scope_line" placeholder="Outbound lead generation, market research"></div>
+      <div style="flex:1 1 140px"><label>Status</label><input type="text" name="status_line" placeholder="Ongoing"></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 200px"><label>Grade</label>
+        <select name="grade">{% for k, v in grades.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+      </div>
+      <div style="flex:1 1 220px"><label>If confirmed privately, describe the client (e.g. "a global technology company")</label><input type="text" name="anon_descriptor"></div>
+      <div style="flex:2 1 300px"><label>Evidence checked (one item per line, leave empty for none)</label>
+        <textarea name="evidence_checked" placeholder="Signed engagement agreement, dated February 2025&#10;Invoice history showing 18 consecutive months of payments"></textarea>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:14px" type="submit">Draft claim</button>
+  </form>
+</div>
+
+<div class="mono" style="margin:22px 0 10px">Claims</div>
+{% for c in vendor.claims|sort(attribute="id", reverse=True) %}
+<div class="panel">
+  <div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:1 1 300px">
+      <span class="mono">{{ c.claim_no }}</span>
+      <span class="mono" style="margin-left:10px;color:{% if c.state=='confirmed' %}var(--seal){% elif c.state=='corrected' %}#8A6D1F{% else %}var(--ink-soft){% endif %}">{{ c.state|upper }}</span>
+      <p style="margin:8px 0 4px;font-size:15px">{{ c.text }}</p>
+      <div style="font-size:13px;color:var(--ink-soft)">{{ c.client_company }} · {{ c.confirmer_email }} · {{ c.grade_label }}</div>
+    </div>
+  </div>
+
+  {% if c.state == 'submitted' %}
+  <div style="margin-top:10px;padding:12px;border:1px solid var(--seal);border-radius:2px;background:var(--seal-bg)">
+    <div class="mono" style="color:var(--seal);margin-bottom:6px">Submitted by the vendor, needs your review</div>
+    {% if c.evidence_notes %}<p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-soft)">Evidence they say they have: {{ c.evidence_notes }}</p>{% endif %}
+    <details>
+      <summary class="mono" style="cursor:pointer;color:var(--seal)">Review, grade and approve</summary>
+      <form method="post" action="/admin/claim/{{ c.id }}/review">
+        <label>Claim text (edit to registry standard)</label><textarea name="text">{{ c.text }}</textarea>
+        <label>Relationship line</label><input type="text" name="relationship_line" value="{{ c.relationship_line }}">
+        <label>Scope line</label><input type="text" name="scope_line" value="{{ c.scope_line }}">
+        <label>Status</label><input type="text" name="status_line" value="{{ c.status_line }}">
+        <label>Grade (based on evidence you actually checked)</label>
+        <select name="grade">{% for k, v in grades.items() %}<option value="{{ k }}" {% if c.grade==k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+        <label>Evidence checked (one per line, what YOU verified, empty for none)</label>
+        <textarea name="evidence_checked">{{ c.evidence_checked }}</textarea>
+        <button class="btn" style="margin-top:12px" type="submit">Approve for countersign</button>
+      </form>
+    </details>
+  </div>
+  {% elif c.state == 'draft' %}
+  <details style="margin-top:12px">
+    <summary class="mono" style="cursor:pointer;color:var(--seal)">Send the countersign request</summary>
+    <p style="font-size:13.5px;color:var(--ink-soft)">Primary route: the vendor sends this from their own inbox. Copy it to them, then mark as sent.</p>
+    <textarea readonly style="min-height:190px;font-family:'IBM Plex Mono',monospace;font-size:12.5px" onclick="this.select()">{{ email_texts[c.id] }}</textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+      <form method="post" action="/admin/claim/{{ c.id }}/mark-sent"><button class="btn" type="submit">Mark as sent</button></form>
+      <form method="post" action="/admin/claim/{{ c.id }}/send-fallback"><button class="btn ghost" type="submit">Send via {{ brand }} instead</button></form>
+    </div>
+  </details>
+  {% elif c.state == 'sent' %}
+  <div style="margin-top:10px;font-size:13px;color:var(--ink-soft)">Sent {{ c.sent_at.strftime('%d %b %Y') }} · link: <span style="font-family:'IBM Plex Mono',monospace">{{ c.confirm_url }}</span></div>
+  {% elif c.state == 'confirmed' %}
+  <div style="margin-top:10px;font-size:13px;color:var(--ink-soft)">Confirmed {{ c.resolved_at.strftime('%d %b %Y') }} by {{ c.confirmer_name }} ({{ c.confirmer_role }}){% if not c.show_confirmer %} · private{% endif %}</div>
+  {% elif c.state == 'corrected' %}
+  <div style="margin-top:10px;padding:12px;border:1px solid #8A6D1F;border-radius:2px;background:rgba(138,109,31,.07)">
+    <div class="mono" style="color:#8A6D1F;margin-bottom:6px">Correction from the client</div>
+    <p style="margin:0 0 10px;font-size:14px">{{ c.correction_text }}</p>
+    <details>
+      <summary class="mono" style="cursor:pointer;color:var(--seal)">Revise the facts and reissue</summary>
+      <form method="post" action="/admin/claim/{{ c.id }}/reopen">
+        <label>Claim text</label><textarea name="text">{{ c.text }}</textarea>
+        <label>Relationship line</label><input type="text" name="relationship_line" value="{{ c.relationship_line }}">
+        <label>Scope line</label><input type="text" name="scope_line" value="{{ c.scope_line }}">
+        <label>Status</label><input type="text" name="status_line" value="{{ c.status_line }}">
+        <label>Grade</label><select name="grade">{% for k, v in grades.items() %}<option value="{{ k }}" {% if c.grade==k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+        <label>Evidence checked</label><textarea name="evidence_checked">{{ c.evidence_checked }}</textarea>
+        <button class="btn" style="margin-top:12px" type="submit">Revise, issue a new link</button>
+      </form>
+    </details>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<p class="sub">No claims yet.</p>
+{% endfor %}
+{% endblock %}

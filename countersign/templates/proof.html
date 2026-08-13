@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ vendor.name }} — certified record | {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Public record &nbsp;·&nbsp; {{ vendor.record_no }}</div>
+<h1>{{ vendor.name }}</h1>
+<p class="sub">{{ vendor.blurb }}{% if vendor.company_no %} · Company No. {{ vendor.company_no }}{% endif %}
+{% if vendor.website %} · <a href="{{ vendor.website }}">{{ vendor.website.replace('https://','').replace('http://','') }}</a>{% endif %}</p>
+
+{% for c in claims %}
+<article class="panel" style="padding:0;overflow:hidden">
+  <div style="padding:18px 22px">
+    <div style="display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
+      <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:17.5px;line-height:1.5;margin:0;flex:1 1 300px">{{ c.text }}</p>
+      <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px">
+      <tr><td class="mono" style="padding:4px 14px 4px 0;white-space:nowrap">Client</td><td style="padding:4px 0">{{ c.client_company if c.show_confirmer else 'Confirmed privately' }}</td></tr>
+      {% if c.relationship_line %}<tr><td class="mono" style="padding:4px 14px 4px 0">Relationship</td><td style="padding:4px 0">{{ c.relationship_line }}</td></tr>{% endif %}
+      {% if c.scope_line %}<tr><td class="mono" style="padding:4px 14px 4px 0">Scope</td><td style="padding:4px 0">{{ c.scope_line }}</td></tr>{% endif %}
+      {% if c.status_line %}<tr><td class="mono" style="padding:4px 14px 4px 0">Status</td><td style="padding:4px 0">{{ c.status_line }}</td></tr>{% endif %}
+    </table>
+  </div>
+  <div style="border-top:1px solid var(--rule-soft);background:var(--wash);padding:14px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <div style="width:34px;height:34px;flex:none;border-radius:50%;border:1.5px solid var(--seal);color:var(--seal);display:grid;place-items:center;background:rgba(126,34,48,.07)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <div style="flex:1 1 240px">
+      {% if c.show_confirmer %}
+      <div style="font-size:14px;font-weight:600">Confirmed by {{ c.confirmer_name }}, {{ c.confirmer_role }} at {{ c.client_company }}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft)">Verified from a {{ c.client_company }} email address{% if c.confirmer_linkedin %} · <a href="{{ c.confirmer_linkedin }}">View LinkedIn profile</a>{% endif %}</div>
+      {% else %}
+      <div style="font-size:14px;font-weight:600">Confirmed privately by a verified client contact{% if c.anon_descriptor %} at {{ c.anon_descriptor }}{% endif %}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft)">Identity verified by {{ brand }}, withheld at the client's request · what was checked is listed below</div>
+      {% endif %}
+    </div>
+    <div class="mono" style="text-align:right">Confirmed<br>{{ c.resolved_at.strftime('%d %b %Y') }}</div>
+  </div>
+  <div style="border-top:1px solid var(--rule-soft);padding:12px 22px 16px;font-size:13px;color:var(--ink-soft)">
+    <span class="mono" style="display:block;margin-bottom:4px;color:var(--ink)">Evidence checked</span>
+    {% if c.evidence_items %}<ul style="margin:0;padding-left:18px">{% for e in c.evidence_items %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% else %}None provided. This claim rests on the client's confirmation alone.{% endif %}
+  </div>
+</article>
+{% endfor %}
+
+<div class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+  <img src="/badge/{{ vendor.record_no }}.svg" alt="{{ brand }} badge" height="44" style="flex:none">
+  <div style="flex:1 1 240px;font-size:13px;color:var(--ink-soft)">The badge links back to this record. Embed: <span style="font-family:'Courier Prime',monospace;font-size:11.5px">&lt;a href="{{ request.url_root.rstrip('/') }}/r/{{ vendor.slug }}"&gt;&lt;img src="{{ request.url_root.rstrip('/') }}/badge/{{ vendor.record_no }}.svg"&gt;&lt;/a&gt;</span></div>
+  <a class="btn ghost" href="/r/{{ vendor.slug }}/case-study.pdf">Download the verified record (PDF)</a>
+</div>
+
+<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin:-6px 0 16px">
+  <a href="/r/{{ vendor.slug }}.json">Machine readable record</a>
+  <a href="/dispute?claim={{ claims[0].claim_no }}">Challenge a claim on this record</a>
+</div>
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:6px">Check this record</div>
+  <p style="margin:0 0 10px;font-size:14px;color:var(--ink-soft)">Enter <strong style="color:var(--ink);font-family:'IBM Plex Mono',monospace">{{ vendor.record_no }}</strong> at <a href="/check">{{ brand|lower }} check</a> to see this record live. A record that does not exist returns no result.</p>
+</div>
+{% endblock %}

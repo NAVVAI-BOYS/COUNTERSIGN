@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Check a record — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Verify</div>
+<h1>Check a record.</h1>
+<p class="sub">Enter a record number from a badge, proof page, or certified case study file. No account needed.</p>
+<form method="get" action="/check" class="panel" style="display:flex;gap:10px;flex-wrap:wrap">
+  <input type="text" name="q" value="{{ q }}" placeholder="CS-0001" style="flex:1 1 200px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em">
+  <button class="btn" type="submit">Check</button>
+</form>
+{% if searched %}
+  {% if result %}
+  <div class="panel" style="border-color:var(--seal)">
+    <div class="mono" style="color:var(--seal);margin-bottom:6px">Record found</div>
+    <div style="font-weight:600;font-size:17px">{{ result.name }} · {{ result.record_no }}</div>
+    <a class="btn ghost" style="margin-top:12px" href="/r/{{ result.slug }}">Open the record</a>
+  </div>
+  {% else %}
+  <div class="panel">
+    <div class="mono" style="margin-bottom:6px">No result</div>
+    <p style="margin:0;font-size:14px;color:var(--ink-soft)">No record exists for "{{ q }}". If someone showed you this number, the record is not on the register.</p>
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

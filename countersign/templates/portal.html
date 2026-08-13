@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Your record — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Your record &nbsp;·&nbsp; {{ vendor.record_no }}</div>
+<h1>Welcome back, {{ vendor.name }}.</h1>
+<p class="sub">{% if live %}Your record is live with {{ live|length }} confirmed claim{{ '' if live|length==1 else 's' }} — <a href="/r/{{ vendor.slug }}">see your public page</a>.{% else %}Your record isn't public yet. It goes live the moment your first claim is confirmed by your client.{% endif %}</p>
+
+<div class="mono" style="margin:18px 0 10px">Your claims</div>
+{% for c in claims %}
+<div class="panel">
+  <span class="mono">{{ c.claim_no }}</span>
+  <span class="mono" style="margin-left:10px;color:{% if c.state=='confirmed' %}var(--seal){% elif c.state=='submitted' %}#8A6D1F{% else %}var(--ink-soft){% endif %}">
+    {% if c.state=='submitted' %}IN REVIEW{% elif c.state=='draft' %}APPROVED, AWAITING SEND{% elif c.state=='sent' %}WITH YOUR CLIENT{% elif c.state=='confirmed' %}LIVE{% elif c.state=='corrected' %}BEING CORRECTED{% else %}{{ c.state|upper }}{% endif %}
+  </span>
+  <p style="margin:8px 0 4px;font-size:15px">{{ c.text }}</p>
+  <div style="font-size:13px;color:var(--ink-soft)">{{ c.client_company }}{% if c.state=='confirmed' %} · confirmed {{ c.resolved_at.strftime('%d %b %Y') }} · {{ c.grade_label }}{% endif %}</div>
+</div>
+{% else %}
+<p class="sub">No claims yet. Add your first below.</p>
+{% endfor %}
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:8px">Add a claim</div>
+  <form method="post" action="/portal/claim">
+    <label>The claim, as you'd say it in a sales conversation</label>
+    <textarea name="text" required></textarea>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 200px"><label>Which client</label><input type="text" name="client" required></div>
+      <div style="flex:1 1 260px"><label>Who confirms it (their work email)</label><input type="email" name="email" required></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px"><label>How long, roughly</label><input type="text" name="relationship"></div>
+      <div style="flex:1 1 200px"><label>What the work covers</label><input type="text" name="scope"></div>
+      <div style="flex:1 1 120px"><label>Status</label><input type="text" name="status"></div>
+    </div>
+    <label>What evidence do you have, if any?</label>
+    <input type="text" name="evidence">
+    <button class="btn" style="margin-top:14px" type="submit">Submit for review</button>
+  </form>
+  <p class="sub" style="font-size:12.5px;margin:10px 0 0">Every claim is reviewed against <a href="/standard">the standard</a>, then your client confirms before anything publishes.</p>
+</div>
+<a href="/logout" class="mono" style="text-decoration:none">Sign out</a>
+{% endblock %}
