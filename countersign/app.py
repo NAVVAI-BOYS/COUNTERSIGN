@@ -319,6 +319,55 @@ def check():
                            searched=searched, result=result)
 
 
+# ---------------------------------------------------------------- sample
+@app.get("/sample")
+def sample():
+    from types import SimpleNamespace as NS
+    from datetime import datetime as dt
+    vendor = NS(record_no="CS-0000", name="Meridian Data Services",
+                slug="_sample", website="https://example.com",
+                company_no="00000000",
+                blurb="Data engineering consultancy, specimen record")
+    claims = [
+        NS(claim_no="CS-0000-01",
+           text="Meridian has run the data platform migration and ongoing pipeline operations for Harbourline Logistics since January 2024.",
+           client_company="Harbourline Logistics",
+           relationship_line="Client since January 2024 · 19 months · renewed once",
+           scope_line="Data platform migration, pipeline operations",
+           status_line="Ongoing", grade="fully_verified",
+           grade_label="Fully Verified",
+           evidence_items=["Signed master services agreement, dated January 2024",
+                           "Invoice history showing 19 consecutive months of payments",
+                           "Renewal recorded January 2025"],
+           show_confirmer=True, anon_descriptor="",
+           confirmer_name="Sarah Whitmore", confirmer_role="Chief Operating Officer",
+           confirmer_linkedin="", resolved_at=dt(2026, 8, 1)),
+        NS(claim_no="CS-0000-02",
+           text="Meridian delivered a reporting automation project that the client operates independently today.",
+           client_company="",
+           relationship_line="Project completed March 2026",
+           scope_line="Reporting automation", status_line="Completed",
+           grade="evidence_verified", grade_label="Evidence Verified",
+           evidence_items=["Statement of work, dated November 2025",
+                           "Project completion sign off, March 2026"],
+           show_confirmer=False, anon_descriptor="a national retail group",
+           confirmer_name="", confirmer_role="", confirmer_linkedin="",
+           resolved_at=dt(2026, 7, 14)),
+        NS(claim_no="CS-0000-03",
+           text="Meridian provides ad hoc data advisory to Bright & Co Accountants.",
+           client_company="Bright & Co Accountants",
+           relationship_line="Client since May 2026",
+           scope_line="Data advisory", status_line="Ongoing",
+           grade="client_confirmed", grade_label="Client Confirmed",
+           evidence_items=[],
+           show_confirmer=True, anon_descriptor="",
+           confirmer_name="James Bright", confirmer_role="Managing Partner",
+           confirmer_linkedin="", resolved_at=dt(2026, 8, 9)),
+    ]
+    return render_template("proof.html", brand=BRAND, vendor=vendor,
+                           claims=claims, grades=GRADES, specimen=True)
+
+
 # ------------------------------------------------------- badge + machine
 @app.get("/badge/<record_no>.svg")
 def badge(record_no):

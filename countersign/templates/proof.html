@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ vendor.name }} — certified record | {{ brand }}{% endblock %}
 {% block content %}
-<div class="eyebrow">Public record &nbsp;·&nbsp; {{ vendor.record_no }}</div>
+{% if specimen %}
+<div style="border:1.5px dashed var(--seal);background:var(--seal-bg);padding:12px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+  <span class="mono" style="color:var(--seal);font-weight:700">SPECIMEN</span>
+  <span style="font-size:13.5px;color:var(--ink-soft)">This is an example record showing what a completed entry looks like. Meridian Data Services is not a real company and this record is not on the register.</span>
+</div>
+{% endif %}
+<div class="eyebrow">{% if specimen %}Specimen record{% else %}Public record{% endif %} &nbsp;·&nbsp; {{ vendor.record_no }}</div>
 <h1>{{ vendor.name }}</h1>
 <p class="sub">{{ vendor.blurb }}{% if vendor.company_no %} · Company No. {{ vendor.company_no }}{% endif %}
 {% if vendor.website %} · <a href="{{ vendor.website }}">{{ vendor.website.replace('https://','').replace('http://','') }}</a>{% endif %}</p>
@@ -43,6 +49,7 @@
 </article>
 {% endfor %}
 
+{% if not specimen %}
 <div class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
   <img src="/badge/{{ vendor.record_no }}.svg" alt="{{ brand }} badge" height="44" style="flex:none">
   <div style="flex:1 1 240px;font-size:13px;color:var(--ink-soft)">The badge links back to this record. Embed: <span style="font-family:'Courier Prime',monospace;font-size:11.5px">&lt;a href="{{ request.url_root.rstrip('/') }}/r/{{ vendor.slug }}"&gt;&lt;img src="{{ request.url_root.rstrip('/') }}/badge/{{ vendor.record_no }}.svg"&gt;&lt;/a&gt;</span></div>
@@ -54,8 +61,16 @@
   <a href="/dispute?claim={{ claims[0].claim_no }}">Challenge a claim on this record</a>
 </div>
 
+{% endif %}
+{% if specimen %}
+<div class="panel" style="border-color:var(--seal)">
+  <div class="mono" style="margin-bottom:6px;color:var(--seal)">This is what your record looks like</div>
+  <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft)">Every live record also carries an embeddable badge, a downloadable verified record PDF with a QR code, a machine readable version for AI assistants, and a public challenge route.</p>
+  <a class="btn" href="/signup">Apply for founding membership</a>
+</div>
+{% else %}
 <div class="panel">
   <div class="mono" style="margin-bottom:6px">Check this record</div>
-  <p style="margin:0 0 10px;font-size:14px;color:var(--ink-soft)">Enter <strong style="color:var(--ink);font-family:'IBM Plex Mono',monospace">{{ vendor.record_no }}</strong> at <a href="/check">{{ brand|lower }} check</a> to see this record live. A record that does not exist returns no result.</p>
-</div>
+  <p style="margin:0 0 10px;font-size:14px;color:var(--ink-soft)">Enter <strong style="color:var(--ink);font-family:'Courier Prime',monospace">{{ vendor.record_no }}</strong> at <a href="/check">{{ brand|lower }} check</a> to see this record live. </div>
+{% endif %}
 {% endblock %}
