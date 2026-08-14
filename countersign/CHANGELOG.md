@@ -4,6 +4,10 @@ What changed and when, newest at the top. One line per change, no jargon. This i
 
 ## 14 August 2026 (overnight and morning)
 
+- Hero rewritten to hit: 'Your word stopped being proof. Your client's signature still is.' The deal now sits in the hero like a price list: first 100 records free for life, places remaining counted live.
+- Home page reorganised on the Wolfsberg model: every section now carries the same numbered header (01 The problem, 02 See it yourself, 03 The method, 04 A record, 05 Publications, 06 Membership), and a new publications library lists the register's public documents like an institution's archive: the standard with its version, the live numbers, the specimen, the dispute procedure.
+- The pair is now interactive: 'click the one you would believe', with the reveal making the real point land — whichever you picked, you were guessing, and so are your buyers. Works without JavaScript too.
+- The pair section restyled as the page's one dark navy band so it dominates the home page, with 'one of these engagements never happened' promoted to the section headline.
 - Home page gained the pair: two identically plausible case studies side by side, one fabricated, with the line 'one of these engagements never happened'. The problem made visible in five seconds, pointing at the example record as the answer.
 - Signup page rewritten after Clem Chambers' advice: opens by making the risk visible (buyers stopped believing case studies), then states plainly what a record does (less work, less risk), then the deal like a price list (first 100 records free for life, paid tiers announced September) with a live counter of founding places remaining. The register's own pages stay calm and institutional; the selling happens here.
 - Fixed a bug where the confirm page browser tab title contained stray code.

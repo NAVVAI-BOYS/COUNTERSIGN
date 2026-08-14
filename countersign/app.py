@@ -316,8 +316,10 @@ def send_via_postmark(claim):
 def home():
     confirmed = Claim.query.filter_by(state="confirmed").count()
     vendors = db.session.query(db.func.count(Vendor.id)).scalar()
+    places_left = max(0, 100 - (vendors or 0))
     return render_template("home.html", brand=BRAND,
-                           confirmed=confirmed, vendors=vendors)
+                           confirmed=confirmed, vendors=vendors,
+                           places_left=places_left)
 
 
 @app.get("/registry")
