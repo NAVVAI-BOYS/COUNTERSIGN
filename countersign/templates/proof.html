@@ -13,7 +13,7 @@
 {% if vendor.website %} · <a href="{{ vendor.website }}">{{ vendor.website.replace('https://','').replace('http://','') }}</a>{% endif %}</p>
 
 {% for c in claims %}
-<article class="panel" style="padding:0;overflow:hidden">
+<article class="panel" style="padding:0">
   <div style="padding:18px 22px">
     <div style="display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
       <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:17.5px;line-height:1.5;margin:0;flex:1 1 300px">{{ c.text }}</p>
