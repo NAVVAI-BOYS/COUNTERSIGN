@@ -341,7 +341,7 @@ def sample():
                            "Renewal recorded January 2025"],
            show_confirmer=True, anon_descriptor="",
            confirmer_name="Sarah Whitmore", confirmer_role="Chief Operating Officer",
-           confirmer_linkedin="", resolved_at=dt(2026, 8, 1)),
+           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 1)),
         NS(claim_no="CS-0000-02",
            text="Meridian delivered a reporting automation project that the client operates independently today.",
            client_company="",
@@ -362,7 +362,7 @@ def sample():
            evidence_items=[],
            show_confirmer=True, anon_descriptor="",
            confirmer_name="James Bright", confirmer_role="Managing Partner",
-           confirmer_linkedin="", resolved_at=dt(2026, 8, 9)),
+           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 9)),
     ]
     return render_template("proof.html", brand=BRAND, vendor=vendor,
                            claims=claims, grades=GRADES, specimen=True)

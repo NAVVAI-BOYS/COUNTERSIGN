@@ -17,7 +17,7 @@
   <div style="padding:18px 22px">
     <div style="display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
       <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:17.5px;line-height:1.5;margin:0;flex:1 1 300px">{{ c.text }}</p>
-      <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
+      <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}" tabindex="0" data-tip="{% if c.grade=='fully_verified' %}The named client confirmed the facts, supporting documents were checked, and payment records confirm how long the relationship has run.{% elif c.grade=='evidence_verified' %}The named client confirmed the facts and supporting documents such as contracts were checked.{% else %}The named client confirmed the facts from a company email address. No documents were checked, and the record says so plainly.{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px">
       <tr><td class="mono" style="padding:4px 14px 4px 0;white-space:nowrap">Client</td><td style="padding:4px 0">{{ c.client_company if c.show_confirmer else 'Confirmed privately' }}</td></tr>
@@ -48,6 +48,25 @@
   </div>
 </article>
 {% endfor %}
+
+<div class="panel">
+  <div class="mono" style="margin-bottom:4px;color:var(--seal)">What a reference call would tell you</div>
+  <p style="margin:0 0 14px;font-size:13px;color:var(--ink-soft)">The standard reference questions, already answered on the record, by the people you would have been put on the phone with.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr>
+      <td class="mono" style="padding:8px 14px 8px 0;vertical-align:top;white-space:nowrap">How long?</td>
+      <td style="padding:8px 0;border-bottom:1px solid var(--rule-soft)">{% for c in claims %}{{ c.client_company if c.show_confirmer else (c.anon_descriptor or 'a verified client') }}: {{ c.relationship_line or 'confirmed relationship' }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    </tr>
+    <tr>
+      <td class="mono" style="padding:8px 14px 8px 0;vertical-align:top">What work?</td>
+      <td style="padding:8px 0;border-bottom:1px solid var(--rule-soft)">{% for c in claims %}{% if c.scope_line %}{{ c.scope_line }}{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}</td>
+    </tr>
+    <tr>
+      <td class="mono" style="padding:8px 14px 8px 0;vertical-align:top">Says who?</td>
+      <td style="padding:8px 0">{% for c in claims %}{% if c.show_confirmer %}{{ c.confirmer_name }}, {{ c.confirmer_role }} at {{ c.client_company }}{% if c.confirmer_linkedin %} (<a href="{{ c.confirmer_linkedin }}">LinkedIn</a>){% endif %}{% else %}A verified contact{% if c.anon_descriptor %} at {{ c.anon_descriptor }}{% endif %}, identity held by {{ brand }}{% endif %}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    </tr>
+  </table>
+</div>
 
 {% if not specimen %}
 <div class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">

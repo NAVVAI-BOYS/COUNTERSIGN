@@ -92,6 +92,13 @@ main{padding:36px 0}
 @media(max-width:640px){h1{font-size:27px}}
 
 /* --- interaction layer --- */
+.grade[data-tip]{cursor:help;position:relative}
+.grade[data-tip]::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%) translateY(4px);width:240px;background:var(--navy);color:#F5F7FC;
+  padding:10px 12px;font-size:11.5px;line-height:1.5;letter-spacing:.02em;text-transform:none;
+  font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s ease, transform .2s ease;
+  z-index:40;box-shadow:0 8px 24px rgba(16,27,58,.25)}
+.grade[data-tip]:hover::before,.grade[data-tip]:focus::before{opacity:1;transform:translateX(-50%) translateY(0)}
 .regbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);background:rgba(255,255,255,.92)}
 .panel{transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
 .panel:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,37,78,.08)}
@@ -129,11 +136,11 @@ a.btn:active,button.btn:active{transform:translateY(1px)}
     {{ brand }}</span></a>
   <span class="spacer"></span>
   <a href="/registry">The register</a>
-  <a href="/sample">Example record</a>
   <a href="/standard">The standard</a>
   <a href="/check">Check a record</a>
   {% if session.get('vendor_id') %}<a href="/portal">My record</a>{% else %}<a href="/login">Sign in</a>
   <a href="/signup">Sign up</a>{% endif %}
+  <a href="/sample" style="color:var(--seal)">Example record</a>
 </div></div>
 <main><div class="wrap">
 {% with messages = get_flashed_messages() %}
