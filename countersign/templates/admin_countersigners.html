@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Countersigners — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Admin · Countersigners</div>
+<h1>Every person who has signed.</h1>
+<p class="sub">Confirmers, newest first. <strong>Only rows marked CONSENTED may receive marketing email.</strong> Everyone may receive the thanks page invitation (contextual) and personal one to one outreach. <a href="/admin">Back to the desk</a></p>
+<div class="panel" style="padding:0">
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <tr style="background:var(--wash)">
+      <th style="padding:9px 14px;text-align:left">Name, role</th>
+      <th style="padding:9px 8px;text-align:left">Company</th>
+      <th style="padding:9px 8px;text-align:left">Email</th>
+      <th style="padding:9px 8px;text-align:left">Confirmed</th>
+      <th style="padding:9px 14px;text-align:left">Marketing</th>
+    </tr>
+    {% for c in rows %}
+    <tr style="border-top:1px solid var(--rule-soft)">
+      <td style="padding:9px 14px;font-weight:600">{{ c.confirmer_name }}, {{ c.confirmer_role }}{% if not c.show_confirmer %} <span class="mono" style="font-size:10px;color:var(--seal)">PRIVATE ON RECORD</span>{% endif %}</td>
+      <td style="padding:9px 8px">{{ c.client_company }}</td>
+      <td style="padding:9px 8px;font-family:'Courier Prime',monospace;font-size:12px">{{ c.confirmer_email }}</td>
+      <td class="mono" style="padding:9px 8px;font-size:11px">{{ c.resolved_at.strftime('%d %b %Y') }} · {{ c.claim_no }}</td>
+      <td style="padding:9px 14px">{% if c.marketing_opt_in %}<span class="mono" style="font-size:10.5px;color:var(--navy);font-weight:700">CONSENTED</span>{% else %}<span class="mono" style="font-size:10.5px;color:var(--ink-soft)">no consent — 1:1 only</span>{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td style="padding:14px" colspan="5">No countersigners yet. Tom is first.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

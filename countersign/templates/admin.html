@@ -9,6 +9,18 @@
   <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Corrections</div><div style="font-size:26px;font-weight:600;{% if corrected %}color:var(--seal){% endif %}">{{ corrected }}</div></div>
 </div>
 
+<div class="statband" style="margin:0 0 8px">
+  <div class="stat"><div class="num">{{ stats.claims_live }}</div><div class="lbl">claims LIVE · {{ stats.month_name }} target {{ stats.target_claims }}</div></div>
+  <div class="stat"><div class="num">{{ stats.vendors_live }}</div><div class="lbl">vendors on the register · target {{ stats.target_vendors }}</div></div>
+  <div class="stat"><div class="num">{{ stats.with_client }}</div><div class="lbl">countersigns with the client now</div></div>
+  <div class="stat"><div class="num">{% if stats.completion is not none %}{{ stats.completion }}%{% else %}—{% endif %}</div><div class="lbl">countersign completion (target 60%+)</div></div>
+</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;margin:0 0 18px">
+  <span class="mono" style="font-size:11px">{{ stats.vendors_all }} vendors total · {{ stats.in_review }} in review · {{ stats.drafts }} drafted · {{ stats.corrections }} corrections open</span>
+  <a href="/admin/countersigners">Countersigners</a>
+  <a href="/admin/activity">Full activity trail</a>
+</div>
+
 {% if sentences %}
 <div class="mono" style="margin:6px 0 10px">Client sentences awaiting review</div>
 {% for cl in sentences %}

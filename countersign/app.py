@@ -90,6 +90,7 @@ class Claim(db.Model):
     anon_descriptor = db.Column(db.String(200), default="")     # e.g. "a global technology company" — shown when private
     client_sentence = db.Column(db.String(400), default="")     # optional, the countersigner's own words
     sentence_review = db.Column(db.String(20), default="")      # "", pending, approved, declined
+    marketing_opt_in = db.Column(db.Boolean, default=False)     # confirmer consent, captured at confirmation
     sentence_ai_note = db.Column(db.Text, default="")
     token = db.Column(db.String(64), unique=True, nullable=False)
     state = db.Column(db.String(20), default="draft")  # submitted|draft|sent|confirmed|corrected|declined
@@ -685,6 +686,7 @@ def confirm_submit(token):
             return render_template("confirm.html", brand=BRAND, claim=claim), 400
         claim.confirmer_name = name
         claim.confirmer_role = role
+        claim.marketing_opt_in = bool(request.form.get("marketing_opt_in"))
         claim.client_sentence = (request.form.get("client_sentence") or "").strip()[:400]
         if claim.client_sentence:
             claim.sentence_review = "pending"
@@ -887,11 +889,33 @@ def admin_home():
     support = SupportMessage.query.filter_by(handled=False).order_by(
         SupportMessage.created_at.desc()).all()
     sentences = Claim.query.filter_by(sentence_review="pending").all()
+
+    # ---- live register stats, computed not typed ----
+    all_claims = Claim.query.all()
+    by_state = {}
+    for cl in all_claims:
+        by_state[cl.state] = by_state.get(cl.state, 0) + 1
+    live = by_state.get("confirmed", 0)
+    sent_ever = sum(1 for cl in all_claims if cl.state in ("sent", "confirmed", "corrected"))
+    completion = round(100 * live / sent_ever) if sent_ever else None
+    vendors_all = Vendor.query.count()
+    vendors_live = sum(1 for v in vendors if any(cl.state == "confirmed" for cl in v.claims))
+    ladder = {8: (15, 40), 9: (60, 180), 10: (150, 450), 11: (240, 720), 12: (330, 1000)}
+    m = now().month
+    target = ladder.get(m, ladder[12] if m > 12 or m < 8 else ladder[8])
+    stats = {"vendors_all": vendors_all, "vendors_live": vendors_live,
+             "claims_live": live, "with_client": by_state.get("sent", 0),
+             "in_review": by_state.get("submitted", 0), "drafts": by_state.get("draft", 0),
+             "corrections": by_state.get("corrected", 0),
+             "completion": completion,
+             "target_vendors": target[0], "target_claims": target[1],
+             "month_name": now().strftime("%B")}
     return render_template("admin.html", brand=BRAND, vendors=vendors,
                            pending=pending, corrected=corrected,
                            confirmed=confirmed, invites=invites,
                            disputes=disputes, support=support,
-                           sentences=sentences, ai_on=bool(ANTHROPIC_API_KEY))
+                           sentences=sentences, ai_on=bool(ANTHROPIC_API_KEY),
+                           stats=stats)
 
 
 @app.post("/admin/vendor")
@@ -1053,6 +1077,24 @@ def admin_invite_handled(invite_id):
     inv.handled = True
     db.session.commit()
     return redirect(url_for("admin_home"))
+
+
+@app.get("/admin/countersigners")
+@admin_required
+def admin_countersigners():
+    rows = (Claim.query.filter(Claim.state == "confirmed")
+            .order_by(Claim.resolved_at.desc()).all())
+    return render_template("admin_countersigners.html", brand=BRAND, rows=rows)
+
+
+@app.get("/admin/activity")
+@admin_required
+def admin_activity():
+    events = (db.session.query(AuditEvent, Claim, Vendor)
+              .join(Claim, AuditEvent.claim_id == Claim.id)
+              .join(Vendor, Claim.vendor_id == Vendor.id)
+              .order_by(AuditEvent.at.desc()).limit(200).all())
+    return render_template("admin_activity.html", brand=BRAND, events=events)
 
 
 @app.post("/admin/sentence/<int:claim_id>/<decision>")

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Activity — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Admin · Activity</div>
+<h1>Everything that happened.</h1>
+<p class="sub">The register's full audit trail, newest first. Every state change, confirmation, correction, deletion and decision. <a href="/admin">Back to the desk</a></p>
+<div class="panel" style="padding:0">
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    {% for ev, claim, vendor in events %}
+    <tr style="border-bottom:1px solid var(--rule-soft)">
+      <td class="mono" style="padding:9px 14px;white-space:nowrap;font-size:11px">{{ ev.at.strftime('%d %b %H:%M') }}</td>
+      <td class="mono" style="padding:9px 8px;white-space:nowrap;font-size:11px">{{ claim.claim_no }}</td>
+      <td style="padding:9px 8px;white-space:nowrap;font-weight:600">{{ vendor.name }}</td>
+      <td style="padding:9px 14px 9px 8px">{{ ev.event }}</td>
+    </tr>
+    {% else %}
+    <tr><td style="padding:14px">Nothing yet. The first entry arrives with the first claim.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
