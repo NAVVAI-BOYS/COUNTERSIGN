@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Confirm the facts — {{ brand }}{% endblock %}
+{% block title %}Confirm the facts — {{ brand }}<p class="sub" style="font-size:12.5px;margin-top:18px">Unsure about anything on this page? <a href="/contact?ctx=confirm-page">Ask us a question</a> before you confirm.</p>
+{% endblock %}
 {% block content %}
 <div class="eyebrow">{{ claim.vendor.name }} has asked you to confirm</div>
 <h1>30 seconds. Facts only.</h1>
@@ -44,4 +45,5 @@ and nothing negative can ever be recorded about you or your company.</p>
 
 <p class="sub" style="font-size:13px">Confirmed from this email address: <strong style="color:var(--ink)">{{ claim.confirmer_email }}</strong>.
 {{ brand }} records facts only. No ratings, no reviews, nothing negative, ever.</p>
+<p class="sub" style="font-size:12.5px;margin-top:18px">Unsure about anything on this page? <a href="/contact?ctx=confirm-page">Ask us a question</a> before you confirm.</p>
 {% endblock %}

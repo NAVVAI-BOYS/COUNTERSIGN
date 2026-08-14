@@ -119,6 +119,42 @@ def log_event(claim_id, event):
     db.session.add(AuditEvent(claim_id=claim_id, event=event))
 
 
+class SupportMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    context = db.Column(db.String(200), default="")     # page they came from
+    ai_draft = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime(timezone=True), default=now)
+    handled = db.Column(db.Boolean, default=False)
+
+
+class EvidenceFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    claim_id = db.Column(db.Integer, db.ForeignKey("claim.id"), nullable=False)
+    claim = db.relationship("Claim", backref="evidence_files")
+    filename = db.Column(db.String(300), nullable=False)
+    mimetype = db.Column(db.String(100), default="application/octet-stream")
+    data = db.Column(db.LargeBinary, nullable=False)     # held ONLY until review
+    ai_summary = db.Column(db.Text, default="")
+    uploaded_at = db.Column(db.DateTime(timezone=True), default=now)
+
+
+MAX_EVIDENCE = 10 * 1024 * 1024
+
+def _attach_evidence(claim, files):
+    for f in files:
+        if not f or not f.filename:
+            continue
+        data = f.read()
+        if not data or len(data) > MAX_EVIDENCE:
+            continue
+        db.session.add(EvidenceFile(claim_id=claim.id, filename=f.filename[:300],
+                                    mimetype=f.mimetype or "application/octet-stream",
+                                    data=data))
+
+
 class Dispute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     claim_no = db.Column(db.String(16), nullable=False)
@@ -319,6 +355,60 @@ def check():
                            searched=searched, result=result)
 
 
+# ------------------------------------------------------------------- ai
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+def ai_call(messages, system=""):
+    """Call the Anthropic API. Returns text or None if no key/failed."""
+    if not ANTHROPIC_API_KEY:
+        return None
+    import json as _json, urllib.request
+    body = {"model": "claude-sonnet-4-6", "max_tokens": 1500, "messages": messages}
+    if system:
+        body["system"] = system
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=_json.dumps(body).encode(),
+        headers={"Content-Type": "application/json",
+                 "x-api-key": ANTHROPIC_API_KEY,
+                 "anthropic-version": "2023-06-01"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            out = _json.loads(r.read())
+        return "".join(b.get("text", "") for b in out.get("content", []) if b.get("type") == "text")
+    except Exception:
+        return None
+
+
+SUPPORT_SYSTEM = f"""You draft replies for {BRAND}, an open register of B2B claims confirmed by the named client before publication. Rules you answer from: facts only, never opinions or ratings; three grades (Client Confirmed, Evidence Verified, Fully Verified); evidence is checked then deleted, never stored; confirmations come from the client's company email; private confirmation is possible with identity held by the register; corrections and disputes are always available; founding membership is free. Write a short, plain, warm reply in UK English. No hyphens or em dashes. If the question needs a human decision (pricing exceptions, legal, complaints), say the team will come back to them and do not invent policy. Sign off as The {BRAND} team."""
+
+
+def ai_read_evidence(ev):
+    """Extract checkable facts from an evidence file. Returns text or None."""
+    import base64
+    content = []
+    if ev.mimetype == "application/pdf":
+        content.append({"type": "document", "source": {"type": "base64",
+                        "media_type": "application/pdf",
+                        "data": base64.b64encode(ev.data).decode()}})
+    elif ev.mimetype.startswith("image/"):
+        content.append({"type": "image", "source": {"type": "base64",
+                        "media_type": ev.mimetype,
+                        "data": base64.b64encode(ev.data).decode()}})
+    else:
+        try:
+            content.append({"type": "text", "text": ev.data.decode("utf-8", "ignore")[:20000]})
+        except Exception:
+            return None
+    content.append({"type": "text", "text":
+        "This document was supplied as evidence for a claim on a verification register. "
+        "List only the checkable facts it establishes: parties named, dates, durations, amounts or counts, "
+        "what was agreed or paid, signatures present. Then state in one line what grade of support it gives "
+        "(contract evidence, payment evidence, both, or neither). Flag anything that looks inconsistent or edited. "
+        "Plain text, short lines, no preamble."})
+    return ai_call([{"role": "user", "content": content}])
+
+
 # ---------------------------------------------------------------- sample
 @app.get("/sample")
 def sample():
@@ -434,6 +524,31 @@ def llms_txt():
     lines += ["", f"## Standard", f"- [Grades and rules]({BASE_URL}/standard)",
               f"- Verify any record: {BASE_URL}/check"]
     return "\n".join(lines), 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
+@app.get("/contact")
+def contact_form():
+    return render_template("contact.html", brand=BRAND, ctx=request.args.get("ctx", ""))
+
+
+@app.post("/contact")
+def contact_submit():
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
+    body = (request.form.get("body") or "").strip()
+    if not (name and email and body):
+        flash("Name, email and the question are all needed.")
+        return render_template("contact.html", brand=BRAND, ctx=""), 400
+    msg = SupportMessage(name=name, email=email, body=body,
+                         context=(request.form.get("ctx") or "").strip())
+    draft = ai_call([{"role": "user", "content":
+        f"Question from {name} ({email}), sent from page: {msg.context or 'site'}\n\n{body}"}],
+        system=SUPPORT_SYSTEM)
+    if draft:
+        msg.ai_draft = draft
+    db.session.add(msg)
+    db.session.commit()
+    return render_template("contact_thanks.html", brand=BRAND)
 
 
 @app.get("/dispute")
@@ -678,6 +793,8 @@ def portal_add_claim():
     db.session.add(c)
     db.session.flush()
     log_event(c.id, "Submitted by the vendor through the portal")
+    db.session.flush()
+    _attach_evidence(c, request.files.getlist("claim_files"))
     db.session.commit()
     flash(f"Claim {c.claim_no} submitted for review. We'll be in touch before anything moves.")
     return redirect(url_for("portal"))
@@ -718,6 +835,7 @@ def onboard_submit(token):
                   token=secrets.token_urlsafe(32))
         db.session.add(c)
         db.session.flush()
+        _attach_evidence(c, request.files.getlist(f"claim{i}_files"))
         log_event(c.id, "Submitted by the vendor through onboarding")
         added += 1
 
@@ -745,10 +863,13 @@ def admin_home():
         InviteRequest.created_at.desc()).all()
     disputes = Dispute.query.filter_by(handled=False).order_by(
         Dispute.created_at.desc()).all()
+    support = SupportMessage.query.filter_by(handled=False).order_by(
+        SupportMessage.created_at.desc()).all()
     return render_template("admin.html", brand=BRAND, vendors=vendors,
                            pending=pending, corrected=corrected,
                            confirmed=confirmed, invites=invites,
-                           disputes=disputes)
+                           disputes=disputes, support=support,
+                           ai_on=bool(ANTHROPIC_API_KEY))
 
 
 @app.post("/admin/vendor")
@@ -894,6 +1015,9 @@ def admin_review_claim(claim_id):
             setattr(claim, field, request.form.get(field).strip())
     claim.grade = request.form.get("grade", claim.grade)
     claim.state = "draft"
+    for ev in list(claim.evidence_files):
+        log_event(claim.id, f"evidence deleted: {ev.filename} checked and deleted on approval")
+        db.session.delete(ev)
     log_event(claim.id, "Reviewed and approved for countersign")
     db.session.commit()
     flash(f"{claim.claim_no} approved. Send the countersign request when ready.")
@@ -907,6 +1031,62 @@ def admin_invite_handled(invite_id):
     inv.handled = True
     db.session.commit()
     return redirect(url_for("admin_home"))
+
+
+@app.post("/admin/support/<int:msg_id>/handled")
+@admin_required
+def admin_support_handled(msg_id):
+    m = db.session.get(SupportMessage, msg_id) or abort(404)
+    m.handled = True
+    db.session.commit()
+    return redirect(url_for("admin_home"))
+
+
+@app.post("/admin/support/<int:msg_id>/redraft")
+@admin_required
+def admin_support_redraft(msg_id):
+    m = db.session.get(SupportMessage, msg_id) or abort(404)
+    draft = ai_call([{"role": "user", "content": f"Question from {m.name}: {m.body}"}], system=SUPPORT_SYSTEM)
+    if draft:
+        m.ai_draft = draft
+        db.session.commit()
+        flash("Draft refreshed.")
+    else:
+        flash("AI is not configured (set ANTHROPIC_API_KEY) or the call failed.")
+    return redirect(url_for("admin_home"))
+
+
+@app.get("/admin/evidence/<int:ev_id>")
+@admin_required
+def admin_evidence_view(ev_id):
+    ev = db.session.get(EvidenceFile, ev_id) or abort(404)
+    return ev.data, 200, {"Content-Type": ev.mimetype,
+                          "Content-Disposition": f'inline; filename="{ev.filename}"'}
+
+
+@app.post("/admin/evidence/<int:ev_id>/read")
+@admin_required
+def admin_evidence_read(ev_id):
+    ev = db.session.get(EvidenceFile, ev_id) or abort(404)
+    summary = ai_read_evidence(ev)
+    if summary:
+        ev.ai_summary = summary
+        db.session.commit()
+        flash("Evidence read. Review the extracted facts, set the grade, then approve — approval deletes the file.")
+    else:
+        flash("AI is not configured (set ANTHROPIC_API_KEY) or the call failed.")
+    return redirect(url_for("admin_vendor", vendor_id=ev.claim.vendor_id))
+
+
+@app.post("/admin/evidence/<int:ev_id>/delete")
+@admin_required
+def admin_evidence_delete(ev_id):
+    ev = db.session.get(EvidenceFile, ev_id) or abort(404)
+    vid = ev.claim.vendor_id
+    log_event(ev.claim_id, f"evidence deleted: {ev.filename} checked and deleted")
+    db.session.delete(ev)
+    db.session.commit()
+    return redirect(url_for("admin_vendor", vendor_id=vid))
 
 
 @app.post("/admin/dispute/<int:dispute_id>/handled")

@@ -21,7 +21,7 @@
 
 <div class="panel">
   <div class="mono" style="margin-bottom:8px">Add a claim</div>
-  <form method="post" action="/portal/claim">
+  <form method="post" enctype="multipart/form-data" action="/portal/claim">
     <label>The claim, as you'd say it in a sales conversation</label>
     <textarea name="text" required></textarea>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -35,6 +35,8 @@
     </div>
     <label>What evidence do you have, if any?</label>
     <input type="text" name="evidence">
+    <label style="margin-top:8px">Attach the evidence itself if it's to hand. Read, graded against, then deleted. Never stored.</label>
+    <input type="file" name="claim_files" multiple style="font-size:13px">
     <button class="btn" style="margin-top:14px" type="submit">Submit for review</button>
   </form>
   <p class="sub" style="font-size:12.5px;margin:10px 0 0">Every claim is reviewed against <a href="/standard">the standard</a>, then your client confirms before anything publishes.</p>

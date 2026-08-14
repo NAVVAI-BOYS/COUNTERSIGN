@@ -9,6 +9,26 @@
   <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Corrections</div><div style="font-size:26px;font-weight:600;{% if corrected %}color:var(--seal){% endif %}">{{ corrected }}</div></div>
 </div>
 
+{% if support %}
+<div class="mono" style="margin:6px 0 10px">Support inbox {% if not ai_on %}<span style="color:var(--seal)">(AI drafting off — set ANTHROPIC_API_KEY on Render to turn it on)</span>{% endif %}</div>
+{% for m in support %}
+<div class="panel">
+  <strong>{{ m.name }}</strong> ({{ m.email }}){% if m.context %} · from {{ m.context }}{% endif %} · {{ m.created_at.strftime('%d %b %H:%M') }}
+  <p style="margin:8px 0;font-size:14px">{{ m.body }}</p>
+  {% if m.ai_draft %}
+  <div style="background:var(--wash);border-left:3px solid var(--navy);padding:10px 14px;margin:8px 0">
+    <div class="mono" style="font-size:10px;margin-bottom:6px">AI drafted reply — review, edit, send from your inbox</div>
+    <div style="font-size:13.5px;white-space:pre-wrap">{{ m.ai_draft }}</div>
+  </div>
+  {% endif %}
+  <div style="display:flex;gap:10px">
+    <form method="post" action="/admin/support/{{ m.id }}/redraft"><button class="btn ghost" type="submit">{% if m.ai_draft %}Redraft{% else %}Draft a reply{% endif %}</button></form>
+    <form method="post" action="/admin/support/{{ m.id }}/handled"><button class="btn ghost" type="submit">Mark handled</button></form>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
 {% if disputes %}
 <div class="mono" style="margin:6px 0 10px;color:var(--seal)">Open challenges</div>
 {% for d in disputes %}

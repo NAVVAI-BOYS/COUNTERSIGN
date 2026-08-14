@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Ask a question — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Support</div>
+<h1>Ask us anything.</h1>
+<p class="sub">Questions about the standard, a record, a confirmation you've been asked for, or joining the register. We reply within one working day.</p>
+<form method="post" class="panel" style="max-width:560px">
+  <input type="hidden" name="ctx" value="{{ ctx }}">
+  <label for="name">Your name</label>
+  <input type="text" id="name" name="name" required>
+  <label for="email">Your email</label>
+  <input type="email" id="email" name="email" required>
+  <label for="body">Your question</label>
+  <textarea id="body" name="body" required></textarea>
+  <button class="btn" style="margin-top:14px" type="submit">Send it</button>
+</form>
+{% endblock %}

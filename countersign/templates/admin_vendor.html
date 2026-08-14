@@ -55,6 +55,19 @@
     <div style="flex:1 1 300px">
       <span class="mono">{{ c.claim_no }}</span>
       <span class="mono" style="margin-left:10px;color:{% if c.state=='confirmed' %}var(--seal){% elif c.state=='corrected' %}#8A6D1F{% else %}var(--ink-soft){% endif %}">{{ c.state|upper }}</span>
+      {% if c.evidence_files %}
+      <div style="background:var(--wash);padding:10px 14px;margin:8px 0;font-size:13px">
+        <div class="mono" style="font-size:10px;margin-bottom:6px;color:var(--seal)">Evidence held for review — deleted automatically on approval</div>
+        {% for ev in c.evidence_files %}
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <a href="/admin/evidence/{{ ev.id }}">{{ ev.filename }}</a>
+          <form method="post" action="/admin/evidence/{{ ev.id }}/read" style="display:inline"><button class="btn ghost" type="submit" style="font-size:11px;padding:4px 10px">Read with AI</button></form>
+          <form method="post" action="/admin/evidence/{{ ev.id }}/delete" style="display:inline"><button class="btn ghost" type="submit" style="font-size:11px;padding:4px 10px">Checked, delete now</button></form>
+        </div>
+        {% if ev.ai_summary %}<div style="white-space:pre-wrap;font-size:12.5px;border-left:3px solid var(--navy);padding-left:10px;margin:6px 0">{{ ev.ai_summary }}</div>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
       <p style="margin:8px 0 4px;font-size:15px">{{ c.text }}</p>
       <div style="font-size:13px;color:var(--ink-soft)">{{ c.client_company }} · {{ c.confirmer_email }} · {{ c.grade_label }}</div>
     </div>
