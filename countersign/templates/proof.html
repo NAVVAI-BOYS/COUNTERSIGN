@@ -41,7 +41,7 @@
       <div style="font-size:12.5px;color:var(--ink-soft)">Identity verified by {{ brand }}, withheld at the client's request · what was checked is listed below</div>
       {% endif %}
     </div>
-    <div class="mono" style="text-align:right">Countersigned<br><span style="font-size:13px;color:var(--navy);font-weight:700">{{ c.resolved_at.strftime('%B %Y') }}</span></div>
+    <div class="mono" style="text-align:right">Countersigned<br><span style="font-size:13px;color:var(--navy);font-weight:700">{{ c.resolved_at.strftime('%B %Y') }}</span>{% if c.standard_version %}<br><span style="font-size:9.5px">Standard v{{ c.standard_version }}</span>{% endif %}</div>
   </div>
   {% if c.client_sentence and c.sentence_review == 'approved' %}
   <div style="border-top:1px solid var(--rule-soft);padding:12px 22px;background:var(--wash)">

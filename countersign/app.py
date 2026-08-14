@@ -42,6 +42,8 @@ FROM_EMAIL = os.environ.get("FROM_EMAIL", "")
 
 db = SQLAlchemy(app)
 
+STANDARD_VERSION = "1.0"   # bump whenever the published standard's rules change
+
 GRADES = {
     "client_confirmed": "Client Confirmed",
     "evidence_verified": "Evidence Verified",
@@ -92,6 +94,7 @@ class Claim(db.Model):
     client_sentence = db.Column(db.String(400), default="")     # optional, the countersigner's own words
     sentence_review = db.Column(db.String(20), default="")      # "", pending, approved, declined
     marketing_opt_in = db.Column(db.Boolean, default=False)     # confirmer consent, captured at confirmation
+    standard_version = db.Column(db.String(10), default="")     # standard in force when countersigned
     sentence_ai_note = db.Column(db.Text, default="")
     token = db.Column(db.String(64), unique=True, nullable=False)
     state = db.Column(db.String(20), default="draft")  # submitted|draft|sent|confirmed|corrected|declined
@@ -625,6 +628,7 @@ def record_json(slug):
         "verify_url": f"{BASE_URL}/check?q={vendor.record_no}",
         "claims": [{
             "claim_no": c.claim_no,
+            "standard_version": c.standard_version or None,
             "statement": c.text,
             "client": c.client_company if c.show_confirmer else (c.anon_descriptor or "confirmed privately"),
             "grade": c.grade,
@@ -810,6 +814,7 @@ def confirm_submit(token):
         claim.confirmer_name = name
         claim.confirmer_role = role
         claim.marketing_opt_in = bool(request.form.get("marketing_opt_in"))
+        claim.standard_version = STANDARD_VERSION
         claim.client_sentence = (request.form.get("client_sentence") or "").strip()[:400]
         if claim.client_sentence:
             claim.sentence_review = "pending"
@@ -1365,6 +1370,7 @@ with app.app_context():
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboard_token VARCHAR(64)",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMP WITH TIME ZONE",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS widget_interest BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS standard_version VARCHAR(10) DEFAULT ''",
     ]
     from sqlalchemy import text as _sqltext
     for _m in _migrations:
