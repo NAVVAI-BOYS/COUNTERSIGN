@@ -93,12 +93,12 @@ main{padding:36px 0}
 
 /* --- interaction layer --- */
 .grade[data-tip]{cursor:help;position:relative}
-.grade[data-tip]::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
-  transform:translateX(-50%) translateY(4px);width:240px;background:var(--navy);color:#F5F7FC;
+.grade[data-tip]::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
+  transform:translateY(4px);width:min(260px, 78vw);background:var(--navy);color:#F5F7FC;
   padding:10px 12px;font-size:11.5px;line-height:1.5;letter-spacing:.02em;text-transform:none;
   font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s ease, transform .2s ease;
-  z-index:40;box-shadow:0 8px 24px rgba(16,27,58,.25)}
-.grade[data-tip]:hover::before,.grade[data-tip]:focus::before{opacity:1;transform:translateX(-50%) translateY(0)}
+  z-index:40;box-shadow:0 8px 24px rgba(16,27,58,.25);white-space:normal;text-align:left}
+.grade[data-tip]:hover::before,.grade[data-tip]:focus::before{opacity:1;transform:translateY(0)}
 .regbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);background:rgba(255,255,255,.92)}
 .panel{transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
 .panel:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,37,78,.08)}
