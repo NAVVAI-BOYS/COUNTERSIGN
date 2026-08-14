@@ -142,6 +142,7 @@ class EvidenceFile(db.Model):
     mimetype = db.Column(db.String(100), default="application/octet-stream")
     data = db.Column(db.LargeBinary, nullable=False)     # held ONLY until review
     ai_summary = db.Column(db.Text, default="")
+    fingerprint = db.Column(db.String(64), default="")          # sha256 — survives deletion in the audit log
     uploaded_at = db.Column(db.DateTime(timezone=True), default=now)
 
 
@@ -154,9 +155,29 @@ def _attach_evidence(claim, files):
         data = f.read()
         if not data or len(data) > MAX_EVIDENCE:
             continue
+        import hashlib
         db.session.add(EvidenceFile(claim_id=claim.id, filename=f.filename[:300],
                                     mimetype=f.mimetype or "application/octet-stream",
+                                    fingerprint=hashlib.sha256(data).hexdigest(),
                                     data=data))
+
+
+class ProofEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    vendor_id = db.Column(db.Integer, db.ForeignKey("vendor.id"), nullable=False)
+    kind = db.Column(db.String(30), nullable=False)   # view, linkedin_click, check_click, pdf, json, badge
+    referrer = db.Column(db.String(500), default="")
+    at = db.Column(db.DateTime(timezone=True), default=now)
+
+
+class EvidenceFingerprint(db.Model):
+    """Retained forever after the document is deleted: proof of what was checked, never the document."""
+    id = db.Column(db.Integer, primary_key=True)
+    claim_id = db.Column(db.Integer, db.ForeignKey("claim.id"), nullable=False)
+    filename = db.Column(db.String(300), nullable=False)
+    sha256 = db.Column(db.String(64), nullable=False)
+    extracted_facts = db.Column(db.Text, default="")   # the AI's non-sensitive fact summary
+    deleted_at = db.Column(db.DateTime(timezone=True), default=now)
 
 
 class Dispute(db.Model):
@@ -334,6 +355,7 @@ def signup_submit():
 @app.get("/r/<slug>")
 def proof_page(slug):
     vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+    _track(vendor, "view")
     claims = [c for c in vendor.claims if c.state == "confirmed"]
     claims.sort(key=lambda c: c.resolved_at or c.created_at, reverse=True)
     if not claims:
@@ -490,9 +512,28 @@ def badge(record_no):
                       "Cache-Control": "public, max-age=3600"}
 
 
+def _track(vendor, kind):
+    try:
+        db.session.add(ProofEvent(vendor_id=vendor.id, kind=kind,
+                                  referrer=(request.referrer or "")[:500]))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+@app.post("/e/<slug>/<kind>")
+def proof_event(slug, kind):
+    if kind not in ("linkedin_click", "check_click", "badge_copy"):
+        abort(404)
+    vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+    _track(vendor, kind)
+    return "", 204
+
+
 @app.get("/r/<slug>.json")
 def record_json(slug):
     vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+    _track(vendor, "json")
     claims = [c for c in vendor.claims if c.state == "confirmed"]
     if not claims:
         abort(404)
@@ -583,9 +624,12 @@ def dispute_submit():
 @app.get("/r/<slug>/case-study.pdf")
 def case_study_pdf(slug):
     vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+    _track(vendor, "pdf")
     claims = [c for c in vendor.claims if c.state == "confirmed"]
     if not claims:
         abort(404)
+    if slug != "_sample":
+        db.session.commit()
     from io import BytesIO
     import qrcode
     from reportlab.lib.pagesizes import A4
@@ -1062,7 +1106,11 @@ def admin_review_claim(claim_id):
     claim.grade = request.form.get("grade", claim.grade)
     claim.state = "draft"
     for ev in list(claim.evidence_files):
-        log_event(claim.id, f"evidence deleted: {ev.filename} checked and deleted on approval")
+        if ev.ai_summary:
+            log_event(claim.id, f"facts extracted before deletion ({ev.filename}): {ev.ai_summary[:400]}")
+        db.session.add(EvidenceFingerprint(claim_id=claim.id, filename=ev.filename,
+            sha256=ev.fingerprint, extracted_facts=ev.ai_summary or ""))
+        log_event(claim.id, f"evidence deleted: {ev.filename} (sha256 {ev.fingerprint}) checked and deleted on approval")
         db.session.delete(ev)
     log_event(claim.id, "Reviewed and approved for countersign")
     db.session.commit()
@@ -1085,6 +1133,29 @@ def admin_countersigners():
     rows = (Claim.query.filter(Claim.state == "confirmed")
             .order_by(Claim.resolved_at.desc()).all())
     return render_template("admin_countersigners.html", brand=BRAND, rows=rows)
+
+
+@app.get("/admin/proof-activity")
+@admin_required
+def admin_proof_activity():
+    vendors = Vendor.query.all()
+    summary = []
+    for v in vendors:
+        evs = ProofEvent.query.filter_by(vendor_id=v.id).all()
+        if not evs:
+            continue
+        counts = {}
+        for e in evs:
+            counts[e.kind] = counts.get(e.kind, 0) + 1
+        summary.append({"vendor": v, "views": counts.get("view", 0),
+                        "linkedin": counts.get("linkedin_click", 0),
+                        "checks": counts.get("check_click", 0),
+                        "pdf": counts.get("pdf", 0), "json": counts.get("json", 0),
+                        "last": max(e.at for e in evs)})
+    recent = (db.session.query(ProofEvent, Vendor).join(Vendor)
+              .order_by(ProofEvent.at.desc()).limit(100).all())
+    return render_template("admin_proof_activity.html", brand=BRAND,
+                           summary=summary, recent=recent)
 
 
 @app.get("/admin/activity")
@@ -1163,7 +1234,11 @@ def admin_evidence_read(ev_id):
 def admin_evidence_delete(ev_id):
     ev = db.session.get(EvidenceFile, ev_id) or abort(404)
     vid = ev.claim.vendor_id
-    log_event(ev.claim_id, f"evidence deleted: {ev.filename} checked and deleted")
+    if ev.ai_summary:
+        log_event(ev.claim_id, f"facts extracted before deletion ({ev.filename}): {ev.ai_summary[:400]}")
+    db.session.add(EvidenceFingerprint(claim_id=ev.claim_id, filename=ev.filename,
+        sha256=ev.fingerprint, extracted_facts=ev.ai_summary or ""))
+    log_event(ev.claim_id, f"evidence deleted: {ev.filename} (sha256 {ev.fingerprint}) checked and deleted")
     db.session.delete(ev)
     db.session.commit()
     return redirect(url_for("admin_vendor", vendor_id=vid))
@@ -1205,6 +1280,7 @@ with app.app_context():
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS sentence_review VARCHAR(20) DEFAULT ''",
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS sentence_ai_note TEXT DEFAULT ''",
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE evidence_file ADD COLUMN IF NOT EXISTS fingerprint VARCHAR(64) DEFAULT ''",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS contact_email VARCHAR(200) DEFAULT ''",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboard_token VARCHAR(64)",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMP WITH TIME ZONE",

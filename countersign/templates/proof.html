@@ -33,7 +33,7 @@
     <div style="flex:1 1 240px">
       {% if c.show_confirmer %}
       <div style="font-size:14px;font-weight:600">Confirmed by {{ c.confirmer_name }}, {{ c.confirmer_role }} at {{ c.client_company }}</div>
-      <div style="font-size:12.5px;color:var(--ink-soft)">Verified from a {{ c.client_company }} email address{% if c.confirmer_linkedin %} · <a href="{{ c.confirmer_linkedin }}">View LinkedIn profile</a>{% endif %}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft)">Verified from a {{ c.client_company }} email address{% if c.confirmer_linkedin %} · <a href="{{ c.confirmer_linkedin }}" {% if not specimen %}onclick="navigator.sendBeacon('/e/{{ vendor.slug }}/linkedin_click')"{% endif %}>View LinkedIn profile</a>{% endif %}</div>
       {% else %}
       <div style="font-size:14px;font-weight:600">Confirmed privately by a verified client contact{% if c.anon_descriptor %} at {{ c.anon_descriptor }}{% endif %}</div>
       <div style="font-size:12.5px;color:var(--ink-soft)">Identity verified by {{ brand }}, withheld at the client's request · what was checked is listed below</div>
@@ -80,6 +80,7 @@
   <div style="flex:1 1 240px;font-size:13px;color:var(--ink-soft)">The badge links back to this record. Embed: <span style="font-family:'Courier Prime',monospace;font-size:11.5px">&lt;a href="{{ request.url_root.rstrip('/') }}/r/{{ vendor.slug }}"&gt;&lt;img src="{{ request.url_root.rstrip('/') }}/badge/{{ vendor.record_no }}.svg"&gt;&lt;/a&gt;</span></div>
   <a class="btn ghost" href="/r/{{ vendor.slug }}/case-study.pdf">Download the verified record (PDF)</a>
 </div>
+<div style="font-size:11.5px;color:var(--ink-soft);margin:-8px 0 16px">Sharing this record in a proposal? Add <span style="font-family:'Courier Prime',monospace">?s=deal-name</span> to the link and your record analytics will show which deals viewed it.</div>
 
 <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin:-6px 0 16px">
   <a href="/r/{{ vendor.slug }}.json">Machine readable record</a>
@@ -96,6 +97,19 @@
 {% else %}
 <div class="panel">
   <div class="mono" style="margin-bottom:6px">Check this record</div>
-  <p style="margin:0 0 10px;font-size:14px;color:var(--ink-soft)">Enter <strong style="color:var(--ink);font-family:'Courier Prime',monospace">{{ vendor.record_no }}</strong> at <a href="/check">{{ brand|lower }} check</a> to see this record live. </div>
+  <p style="margin:0 0 10px;font-size:14px;color:var(--ink-soft)">Enter <strong style="color:var(--ink);font-family:'Courier Prime',monospace">{{ vendor.record_no }}</strong> at <a href="/check" onclick="navigator.sendBeacon('/e/{{ vendor.slug }}/check_click')">{{ brand|lower }} check</a> to see this record live. </div>
+{% endif %}
+{% if not specimen %}
+<script>
+(function(){
+  function ping(kind){ try{ navigator.sendBeacon('/e/{{ vendor.slug }}/'+kind); }catch(e){} }
+  document.querySelectorAll('a[href*="linkedin.com"]').forEach(function(a){
+    a.addEventListener('click', function(){ ping('linkedin_click'); });
+  });
+  document.querySelectorAll('a[href^="/check"]').forEach(function(a){
+    a.addEventListener('click', function(){ ping('check_click'); });
+  });
+})();
+</script>
 {% endif %}
 {% endblock %}
