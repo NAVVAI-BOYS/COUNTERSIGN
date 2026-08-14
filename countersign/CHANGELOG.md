@@ -4,6 +4,8 @@ What changed and when, newest at the top. One line per change, no jargon. This i
 
 ## 14 August 2026 (overnight and morning)
 
+- Home page gained the pair: two identically plausible case studies side by side, one fabricated, with the line 'one of these engagements never happened'. The problem made visible in five seconds, pointing at the example record as the answer.
+- Signup page rewritten after Clem Chambers' advice: opens by making the risk visible (buyers stopped believing case studies), then states plainly what a record does (less work, less risk), then the deal like a price list (first 100 records free for life, paid tiers announced September) with a live counter of founding places remaining. The register's own pages stay calm and institutional; the selling happens here.
 - Fixed a bug where the confirm page browser tab title contained stray code.
 - Tidied the top navigation: five clean links plus a Sign up button, no stray dots. The numbers page, ask a question, and challenge a record links moved to the footer where institutional links belong.
 - Every countersigned claim is now stamped with the version of the standard it was verified under (Standard v1.0). Records keep this forever.

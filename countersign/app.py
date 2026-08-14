@@ -355,7 +355,8 @@ def invite_redirect():
 
 @app.get("/signup")
 def signup():
-    return render_template("invite.html", brand=BRAND)
+    places_left = max(0, 100 - Vendor.query.count())
+    return render_template("invite.html", brand=BRAND, places_left=places_left)
 
 
 @app.post("/signup")

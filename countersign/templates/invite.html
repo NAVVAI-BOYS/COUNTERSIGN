@@ -1,9 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Get certified — {{ brand }}{% endblock %}
+{% block title %}Founding membership — {{ brand }}{% endblock %}
 {% block content %}
 <div class="eyebrow">Founding cohort</div>
-<h1>Apply for founding membership.</h1>
-<p class="sub">The register opens with its founding members. Free, founding number for life. Onboarding is a short call with us, or a five minute form if you would rather do it yourself. Either way your client confirms in one click before anything publishes.</p>
+<h1>Your buyers stopped believing case studies.<br>Here is the fix.</h1>
+<p class="sub" style="max-width:640px">AI made fake case studies and testimonials free to produce and impossible to spot, so buyers now discount all of them, including your real ones. Every claim on your website is one you would struggle to prove if a buyer, a competitor, or a regulator asked you to. Most companies have not noticed this yet. Their pipeline has.</p>
+
+<div class="panel" style="max-width:640px;margin:18px 0">
+  <div class="mono" style="font-size:10.5px;margin-bottom:10px">What a countersigned record does for you</div>
+  <p style="margin:0 0 10px;font-size:14.5px"><strong>Less work.</strong> Your client confirms the facts once, in one click, from their own inbox. From then on, that engagement answers its own reference calls: buyers read the record, check the confirmer, and move on. Diligence questions get a link instead of a meeting.</p>
+  <p style="margin:0;font-size:14.5px"><strong>Less risk.</strong> Your claims become checkable instead of deniable: graded against evidence, confirmed by a named client, documented under a published standard. Nobody can call your bluff, because there is no bluff to call.</p>
+</div>
+
+<div class="panel" style="max-width:640px;margin:0 0 22px;background:var(--wash)">
+  <div class="mono" style="font-size:10.5px;margin-bottom:8px">The deal, plainly</div>
+  <p style="margin:0;font-size:14.5px">The founding class is the first 100 records: <strong>free for life</strong> on the register, founding number included. Paid tiers are announced in September; founding members never pay them. Founding status is confirmed when your first claim is countersigned by your client.{% if places_left is defined %} <span class="mono" style="font-size:12px;color:var(--seal);font-weight:700">{{ places_left }} of 100 founding places remaining.</span>{% endif %}</p>
+</div>
+
 <form method="post" action="/signup" class="panel" style="max-width:560px">
   <label for="company">Company</label>
   <input type="text" id="company" name="company" required>
@@ -15,5 +27,5 @@
   <input type="text" id="sells" name="sells" placeholder="Lead generation for US manufacturing companies">
   <button class="btn" style="margin-top:16px" type="submit">Request an invitation</button>
 </form>
-<p class="sub" style="font-size:13px">We reply personally within two working days. Certification is never guaranteed: claims are checked, and some are rejected.</p>
+<p class="sub" style="font-size:13px">We reply personally within two working days. Certification is never guaranteed: claims are checked, and some are rejected. That is the point.</p>
 {% endblock %}
