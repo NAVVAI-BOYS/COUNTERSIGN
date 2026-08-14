@@ -130,6 +130,9 @@ a.btn:active,button.btn:active{transform:translateY(1px)}
   .sealdraw.in path,.gradepulse.in::after{animation:none}
   .panel,.panel:hover{transform:none}
 }
+.regbar .navdiv{width:1px;height:18px;background:var(--rule, #CBD3E4);display:inline-block;margin:0 4px;vertical-align:middle}
+.regbar a.navcta{background:var(--seal, #6C1D45);color:#fff !important;padding:7px 14px}
+.regbar a.navcta:hover{opacity:.92}
 </style>
 </head>
 <body>
@@ -143,11 +146,12 @@ a.btn:active,button.btn:active{transform:translateY(1px)}
     {{ brand }}</span></a>
   <span class="spacer"></span>
   <a href="/registry">The register</a>
-  <a href="/standard">The standard</a> · <a href="/numbers">The register, in numbers</a> · <a href="/contact">Ask a question</a>
+  <a href="/standard">The standard</a>
   <a href="/check">Check a record</a>
-  {% if session.get('vendor_id') %}<a href="/portal">My record</a>{% else %}<a href="/login">Sign in</a>
-  <a href="/signup">Sign up</a>{% endif %}
   <a href="/sample" style="color:var(--seal)">Example record</a>
+  <span class="navdiv" aria-hidden="true"></span>
+  {% if session.get('vendor_id') %}<a href="/portal">My record</a>{% else %}<a href="/login">Sign in</a>
+  <a href="/signup" class="navcta">Sign up</a>{% endif %}
 </div></div>
 <main><div class="wrap">
 {% with messages = get_flashed_messages() %}
@@ -159,6 +163,9 @@ a.btn:active,button.btn:active{transform:translateY(1px)}
   <span>{{ brand }}</span>
   <span>Facts only. No ratings, no opinions.</span>
   <span>Evidence is checked, then deleted.</span>
+</div>
+<div class="wrap" style="margin-top:10px;font-size:12.5px">
+  <a href="/standard" style="color:#B8C2DC">The standard</a><span style="margin:0 8px;opacity:.5">·</span><a href="/numbers" style="color:#B8C2DC">The register, in numbers</a><span style="margin:0 8px;opacity:.5">·</span><a href="/contact" style="color:#B8C2DC">Ask a question</a><span style="margin:0 8px;opacity:.5">·</span><a href="/dispute" style="color:#B8C2DC">Challenge a record</a>
 </div></footer>
 <script>
 (function(){
