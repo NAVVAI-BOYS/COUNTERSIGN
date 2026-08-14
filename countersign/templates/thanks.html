@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Confirmed — {{ brand }}{% endblock %}
+{% block title %}Confirmed — {{ brand }}<div class="panel" style="margin-top:22px;border-color:var(--seal)">
+  <div class="mono" style="font-size:10.5px;margin-bottom:8px;color:var(--seal)">For your own company</div>
+  <p style="font-size:14px;margin:0 0 12px;color:var(--ink-soft)">You have just seen how the register works from the inside. If your company has claims its clients would sign, founding membership is open and free, and founding members keep their number for life.</p>
+  <a class="btn" href="/signup">Apply for a founding place</a>
+</div>
+{% endblock %}
 {% block content %}
 <div class="eyebrow">Done</div>
 <h1>Confirmed. Thank you.</h1>
@@ -12,4 +17,9 @@ marked as confirmed by {% if claim.show_confirmer %}{{ claim.confirmer_name }}, 
   If anything changes, reply to the original email and the record gets corrected.</p>
 </div>
 <a class="btn ghost" href="/r/{{ claim.vendor.slug }}">See the public record</a>
+<div class="panel" style="margin-top:22px;border-color:var(--seal)">
+  <div class="mono" style="font-size:10.5px;margin-bottom:8px;color:var(--seal)">For your own company</div>
+  <p style="font-size:14px;margin:0 0 12px;color:var(--ink-soft)">You have just seen how the register works from the inside. If your company has claims its clients would sign, founding membership is open and free, and founding members keep their number for life.</p>
+  <a class="btn" href="/signup">Apply for a founding place</a>
+</div>
 {% endblock %}

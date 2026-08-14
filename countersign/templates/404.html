@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}No such record — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Not found</div>
+<h1>No record here.</h1>
+<p class="sub">The page you asked for does not exist on the register. If you were checking a record number, that absence is itself the answer: a record that does not exist returns no result.</p>
+<p><a class="btn" href="/check">Check a record</a> &nbsp; <a class="btn ghost" href="/registry">Browse the register</a></p>
+{% endblock %}

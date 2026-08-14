@@ -41,6 +41,12 @@
     </div>
     <div class="mono" style="text-align:right">Confirmed<br>{{ c.resolved_at.strftime('%d %b %Y') }}</div>
   </div>
+  {% if c.client_sentence and c.sentence_review == 'approved' %}
+  <div style="border-top:1px solid var(--rule-soft);padding:12px 22px;background:var(--wash)">
+    <span class="mono" style="display:block;margin-bottom:4px;font-size:10px">In the client's own words — not a verified fact</span>
+    <span style="font-family:'Source Serif 4',serif;font-style:italic;font-size:14.5px">"{{ c.client_sentence }}"</span>
+  </div>
+  {% endif %}
   <div style="border-top:1px solid var(--rule-soft);padding:12px 22px 16px;font-size:13px;color:var(--ink-soft)">
     <span class="mono" style="display:block;margin-bottom:4px;color:var(--ink)">Evidence checked</span>
     {% if c.evidence_items %}<ul style="margin:0;padding-left:18px">{% for e in c.evidence_items %}<li>{{ e }}</li>{% endfor %}</ul>

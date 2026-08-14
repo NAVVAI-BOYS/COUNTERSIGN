@@ -88,6 +88,9 @@ class Claim(db.Model):
     confirmer_linkedin = db.Column(db.String(300), default="")
     show_confirmer = db.Column(db.Boolean, default=True)        # private confirmation if False
     anon_descriptor = db.Column(db.String(200), default="")     # e.g. "a global technology company" — shown when private
+    client_sentence = db.Column(db.String(400), default="")     # optional, the countersigner's own words
+    sentence_review = db.Column(db.String(20), default="")      # "", pending, approved, declined
+    sentence_ai_note = db.Column(db.Text, default="")
     token = db.Column(db.String(64), unique=True, nullable=False)
     state = db.Column(db.String(20), default="draft")  # submitted|draft|sent|confirmed|corrected|declined
     sent_at = db.Column(db.DateTime(timezone=True))
@@ -431,7 +434,9 @@ def sample():
                            "Renewal recorded January 2025"],
            show_confirmer=True, anon_descriptor="",
            confirmer_name="Sarah Whitmore", confirmer_role="Chief Operating Officer",
-           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 1)),
+           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 1),
+           client_sentence="Meridian took over a migration two previous suppliers had failed to land, and the pipelines have run without an incident since.",
+           sentence_review="approved"),
         NS(claim_no="CS-0000-02",
            text="Meridian delivered a reporting automation project that the client operates independently today.",
            client_company="",
@@ -442,7 +447,7 @@ def sample():
                            "Project completion sign off, March 2026"],
            show_confirmer=False, anon_descriptor="a national retail group",
            confirmer_name="", confirmer_role="", confirmer_linkedin="",
-           resolved_at=dt(2026, 7, 14)),
+           resolved_at=dt(2026, 7, 14), client_sentence="", sentence_review=""),
         NS(claim_no="CS-0000-03",
            text="Meridian provides ad hoc data advisory to Bright & Co Accountants.",
            client_company="Bright & Co Accountants",
@@ -452,7 +457,8 @@ def sample():
            evidence_items=[],
            show_confirmer=True, anon_descriptor="",
            confirmer_name="James Bright", confirmer_role="Managing Partner",
-           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 9)),
+           confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 9),
+           client_sentence="", sentence_review=""),
     ]
     return render_template("proof.html", brand=BRAND, vendor=vendor,
                            claims=claims, grades=GRADES, specimen=True)
@@ -679,6 +685,21 @@ def confirm_submit(token):
             return render_template("confirm.html", brand=BRAND, claim=claim), 400
         claim.confirmer_name = name
         claim.confirmer_role = role
+        claim.client_sentence = (request.form.get("client_sentence") or "").strip()[:400]
+        if claim.client_sentence:
+            claim.sentence_review = "pending"
+            note = ai_call([{"role": "user", "content":
+                f"Claim on the record (verified): {claim.text}\n"
+                f"Client sentence submitted by the countersigner: {claim.client_sentence}"}],
+                system=f"You screen client sentences for {BRAND}, a register of verified B2B facts. "
+                       "The sentence is the client's own words shown beside verified facts. Decline reasons: "
+                       "it asserts specific facts not in the verified claim (names, numbers, dates not on the record), "
+                       "or it makes outcome/ROI claims (revenue, growth, savings figures). "
+                       "General praise, opinions and descriptions of the working relationship are FINE — they are "
+                       "clearly marked as the client's words, not findings. Reply with exactly one line: "
+                       "CLEAR — <five word reason> or FLAG — <what rule it touches>.")
+            if note:
+                claim.sentence_ai_note = note.strip()[:500]
         claim.confirmer_linkedin = linkedin
         claim.show_confirmer = show
         claim.state = "confirmed"
@@ -865,11 +886,12 @@ def admin_home():
         Dispute.created_at.desc()).all()
     support = SupportMessage.query.filter_by(handled=False).order_by(
         SupportMessage.created_at.desc()).all()
+    sentences = Claim.query.filter_by(sentence_review="pending").all()
     return render_template("admin.html", brand=BRAND, vendors=vendors,
                            pending=pending, corrected=corrected,
                            confirmed=confirmed, invites=invites,
                            disputes=disputes, support=support,
-                           ai_on=bool(ANTHROPIC_API_KEY))
+                           sentences=sentences, ai_on=bool(ANTHROPIC_API_KEY))
 
 
 @app.post("/admin/vendor")
@@ -1033,6 +1055,22 @@ def admin_invite_handled(invite_id):
     return redirect(url_for("admin_home"))
 
 
+@app.post("/admin/sentence/<int:claim_id>/<decision>")
+@admin_required
+def admin_sentence_decide(claim_id, decision):
+    if decision not in ("approve", "decline"):
+        abort(404)
+    claim = Claim.query.get_or_404(claim_id)
+    if decision == "approve":
+        claim.sentence_review = "approved"
+        log_event(claim.id, "Client sentence approved and published")
+    else:
+        claim.sentence_review = "declined"
+        log_event(claim.id, "Client sentence declined under the standard")
+    db.session.commit()
+    return redirect(url_for("admin_home"))
+
+
 @app.post("/admin/support/<int:msg_id>/handled")
 @admin_required
 def admin_support_handled(msg_id):
@@ -1096,6 +1134,17 @@ def admin_dispute_handled(dispute_id):
     d.handled = True
     db.session.commit()
     return redirect(url_for("admin_home"))
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html", brand=BRAND), 404
+
+
+@app.get("/robots.txt")
+def robots():
+    return ("User-agent: *\nDisallow: /admin\nDisallow: /confirm/\nDisallow: /onboard/\nDisallow: /auth/\n"
+            f"Sitemap: {BASE_URL}/llms.txt\n"), 200, {"Content-Type": "text/plain"}
 
 
 @app.get("/healthz")

@@ -9,6 +9,21 @@
   <div class="panel" style="flex:1 1 140px;margin:0"><div class="mono">Corrections</div><div style="font-size:26px;font-weight:600;{% if corrected %}color:var(--seal){% endif %}">{{ corrected }}</div></div>
 </div>
 
+{% if sentences %}
+<div class="mono" style="margin:6px 0 10px">Client sentences awaiting review</div>
+{% for cl in sentences %}
+<div class="panel">
+  <strong>{{ cl.claim_no }}</strong> · {{ cl.vendor.name }} · confirmed by {{ cl.confirmer_name }}
+  <p style="margin:8px 0;font-size:14.5px;font-style:italic">"{{ cl.client_sentence }}"</p>
+  {% if cl.sentence_ai_note %}<div class="mono" style="font-size:11px;margin-bottom:8px;{% if cl.sentence_ai_note.startswith('FLAG') %}color:var(--seal){% endif %}">AI: {{ cl.sentence_ai_note }}</div>{% endif %}
+  <div style="display:flex;gap:10px">
+    <form method="post" action="/admin/sentence/{{ cl.id }}/approve"><button class="btn" type="submit">Publish it</button></form>
+    <form method="post" action="/admin/sentence/{{ cl.id }}/decline"><button class="btn ghost" type="submit">Decline it</button></form>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
 {% if support %}
 <div class="mono" style="margin:6px 0 10px">Support inbox {% if not ai_on %}<span style="color:var(--seal)">(AI drafting off — set ANTHROPIC_API_KEY on Render to turn it on)</span>{% endif %}</div>
 {% for m in support %}
