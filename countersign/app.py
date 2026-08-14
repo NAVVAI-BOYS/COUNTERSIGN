@@ -1197,6 +1197,25 @@ def healthz():
 
 with app.app_context():
     db.create_all()
+    # self migration: add columns introduced after the first deploy.
+    # create_all makes missing tables but never alters existing ones.
+    _migrations = [
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS anon_descriptor VARCHAR(200) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS client_sentence VARCHAR(400) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS sentence_review VARCHAR(20) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS sentence_ai_note TEXT DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS contact_email VARCHAR(200) DEFAULT ''",
+        "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboard_token VARCHAR(64)",
+        "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMP WITH TIME ZONE",
+    ]
+    from sqlalchemy import text as _sqltext
+    for _m in _migrations:
+        try:
+            db.session.execute(_sqltext(_m))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()   # SQLite (no IF NOT EXISTS) or already applied
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
