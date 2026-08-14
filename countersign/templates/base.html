@@ -90,6 +90,32 @@ main{padding:36px 0}
 .statband .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-top:3px}
 @media(max-width:640px){.hero{padding:34px 24px}.hero h1{font-size:30px}}
 @media(max-width:640px){h1{font-size:27px}}
+
+/* --- interaction layer --- */
+.regbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);background:rgba(255,255,255,.92)}
+.panel{transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
+.panel:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,37,78,.08)}
+a.btn{transition:background .2s ease, transform .15s ease}
+a.btn:active,button.btn:active{transform:translateY(1px)}
+.rv{opacity:0;transform:translateY(14px);transition:opacity .55s ease, transform .55s ease}
+.rv.in{opacity:1;transform:none}
+.hero .guilloche path{animation:gdrift 26s linear infinite alternate}
+.hero .guilloche path:nth-child(odd){animation-duration:34s;animation-direction:alternate-reverse}
+@keyframes gdrift{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+.sealdraw path{stroke-dasharray:24;stroke-dashoffset:24}
+.sealdraw.in path{animation:drawcheck .7s ease forwards .25s}
+@keyframes drawcheck{to{stroke-dashoffset:0}}
+.gradepulse{position:relative}
+.gradepulse::after{content:"";position:absolute;inset:-3px;border:1px solid var(--seal);opacity:0;pointer-events:none}
+.gradepulse.in::after{animation:stamp .6s ease .4s}
+@keyframes stamp{0%{opacity:.8;transform:scale(1.25)}100%{opacity:0;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .hero .guilloche path{animation:none}
+  .sealdraw path{stroke-dasharray:none;stroke-dashoffset:0}
+  .sealdraw.in path,.gradepulse.in::after{animation:none}
+  .panel,.panel:hover{transform:none}
+}
 </style>
 </head>
 <body>
@@ -120,5 +146,22 @@ main{padding:36px 0}
   <span>Facts only. No ratings, no opinions.</span>
   <span>Evidence is checked, then deleted.</span>
 </div></footer>
+<script>
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.panel, .hero, main h1, .eyebrow, .statband, article');
+  els.forEach(function(el, i){ el.classList.add('rv'); el.style.transitionDelay = Math.min(i * 40, 240) + 'ms'; });
+  // seal check circles: find small round confirm marks and grade chips
+  document.querySelectorAll('main svg').forEach(function(svg){
+    var p = svg.querySelector('path[d^="M8"], path[d^="M20"]');
+    if (p && svg.closest('div[style*="border-radius:50%"], .sealmark') ) svg.classList.add('sealdraw');
+  });
+  document.querySelectorAll('.grade').forEach(function(g){ g.classList.add('gradepulse'); });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.rv, .sealdraw, .gradepulse').forEach(function(el){ io.observe(el); });
+})();
+</script>
 </body>
 </html>
