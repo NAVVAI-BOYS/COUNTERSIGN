@@ -65,6 +65,7 @@ class Vendor(db.Model):
     login_token = db.Column(db.String(64), unique=True)
     onboard_token = db.Column(db.String(64), unique=True)
     onboarded_at = db.Column(db.DateTime(timezone=True))
+    widget_interest = db.Column(db.Boolean, default=False)   # wants the website embed when it ships
     created_at = db.Column(db.DateTime(timezone=True), default=now)
     claims = db.relationship("Claim", backref="vendor", lazy=True)
 
@@ -323,6 +324,22 @@ def registry():
     return render_template("registry.html", brand=BRAND, vendors=visible)
 
 
+@app.get("/numbers")
+def register_numbers():
+    all_claims = Claim.query.all()
+    live = [c for c in all_claims if c.state == "confirmed"]
+    vendors_live = len({c.vendor_id for c in live})
+    sent_ever = sum(1 for c in all_claims if c.state in ("sent", "confirmed", "corrected"))
+    completion = round(100 * len(live) / sent_ever) if sent_ever else None
+    corrections = AuditEvent.query.filter(AuditEvent.event.like("Correction%")).count()
+    declined = sum(1 for c in all_claims if c.state == "declined")
+    sentences_declined = AuditEvent.query.filter(AuditEvent.event.like("%sentence declined%")).count()
+    return render_template("numbers.html", brand=BRAND, vendors=vendors_live,
+                           claims=len(live), corrections=corrections,
+                           declined=declined, sentences_declined=sentences_declined,
+                           completion=completion)
+
+
 @app.get("/standard")
 def standard():
     return render_template("standard.html", brand=BRAND)
@@ -361,7 +378,7 @@ def proof_page(slug):
     if not claims:
         abort(404)
     return render_template("proof.html", brand=BRAND, vendor=vendor,
-                           claims=claims, grades=GRADES)
+                           claims=claims, grades=GRADES, base_url=BASE_URL)
 
 
 @app.get("/check")
@@ -484,7 +501,7 @@ def sample():
            client_sentence="", sentence_review=""),
     ]
     return render_template("proof.html", brand=BRAND, vendor=vendor,
-                           claims=claims, grades=GRADES, specimen=True)
+                           claims=claims, grades=GRADES, specimen=True, base_url=BASE_URL)
 
 
 # ------------------------------------------------------- badge + machine
@@ -528,6 +545,68 @@ def proof_event(slug, kind):
     vendor = Vendor.query.filter_by(slug=slug).first_or_404()
     _track(vendor, kind)
     return "", 204
+
+
+@app.get("/r/<slug>/card.png")
+def share_card(slug):
+    vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+    claims = [c for c in vendor.claims if c.state == "confirmed"]
+    if not claims:
+        abort(404)
+    _track(vendor, "card")
+    from PIL import Image, ImageDraw, ImageFont
+    NAVY = (22, 37, 78); ICE = (245, 247, 252); MAROON = (108, 29, 69)
+    SOFT = (176, 186, 214); RULE = (58, 76, 122)
+    W, H = 1200, 630
+    img = Image.new("RGB", (W, H), NAVY)
+    d = ImageDraw.Draw(img)
+    FD = "/usr/share/fonts/truetype/dejavu/"
+    serif_b = lambda n: ImageFont.truetype(FD + "DejaVuSerif-Bold.ttf", n)
+    sans = lambda n: ImageFont.truetype(FD + "DejaVuSans.ttf", n)
+    sans_b = lambda n: ImageFont.truetype(FD + "DejaVuSans-Bold.ttf", n)
+    mono = lambda n: ImageFont.truetype(FD + "DejaVuSansMono.ttf", n)
+    # faint guilloche
+    import math
+    for k in range(6):
+        pts = [(x, H - 90 + int(28 * math.sin(x / 90.0 + k * 1.1)) + k * 7) for x in range(0, W, 6)]
+        d.line(pts, fill=(30, 48, 96), width=1)
+    # seal
+    cx, cy, r = 96, 96, 44
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=ICE, width=4)
+    d.line([(cx - 18, cy + 2), (cx - 4, cy + 16), (cx + 22, cy - 14)], fill=ICE, width=6, joint="curve")
+    d.text((164, 62), BRAND.upper(), font=sans_b(30), fill=ICE)
+    d.text((164, 100), "REGISTER OF COUNTERSIGNED CLAIMS", font=mono(17), fill=SOFT)
+    d.line([(64, 176), (W - 64, 176)], fill=RULE, width=2)
+    # vendor + record no
+    name = vendor.name if len(vendor.name) <= 30 else vendor.name[:29] + "…"
+    d.text((64, 216), name, font=serif_b(64), fill=ICE)
+    d.text((64, 302), vendor.record_no, font=mono(30), fill=(200, 170, 190))
+    # countersigners line
+    named = [c.client_company for c in claims if c.show_confirmer]
+    priv = len(claims) - len(named)
+    parts = named[:2]
+    extra = len(named) - len(parts) + priv
+    line = "Countersigned by " + ", ".join(parts) if parts else "Countersigned"
+    if extra > 0:
+        line += f" and {extra} more" if parts else f" by {extra} verified client{'s' if extra > 1 else ''}"
+    d.text((64, 372), line, font=sans(30), fill=ICE)
+    # best grade chip
+    order = ["fully_verified", "evidence_verified", "client_confirmed"]
+    best = min(claims, key=lambda c: order.index(c.grade) if c.grade in order else 9).grade
+    _g = GRADES.get(best, "Client Confirmed")
+    label = (_g if isinstance(_g, str) else _g.get("label", "Client Confirmed")).upper()
+    tw = d.textlength(label, font=sans_b(24))
+    d.rectangle([64, 440, 64 + tw + 44, 494], fill=ICE)
+    d.text((86, 454), label, font=sans_b(24), fill=NAVY)
+    # dates + verify line
+    latest = max(c.resolved_at for c in claims if c.resolved_at)
+    d.text((64, 540), f"Countersigned {latest.strftime('%B %Y')}  ·  Verify: {BASE_URL.replace('https://','')}/check", font=mono(19), fill=SOFT)
+    import io as _io
+    buf = _io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    from flask import send_file
+    return send_file(buf, mimetype="image/png", max_age=3600)
 
 
 @app.get("/r/<slug>.json")
@@ -880,6 +959,7 @@ def onboard_submit(token):
     vendor.website = (request.form.get("website") or vendor.website or "").strip()
     vendor.company_no = (request.form.get("company_no") or vendor.company_no or "").strip()
     vendor.blurb = (request.form.get("blurb") or vendor.blurb or "").strip()
+    vendor.widget_interest = bool(request.form.get("widget_interest"))
 
     added = 0
     for i in (1, 2, 3):
@@ -1284,6 +1364,7 @@ with app.app_context():
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS contact_email VARCHAR(200) DEFAULT ''",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboard_token VARCHAR(64)",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMP WITH TIME ZONE",
+        "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS widget_interest BOOLEAN DEFAULT FALSE",
     ]
     from sqlalchemy import text as _sqltext
     for _m in _migrations:

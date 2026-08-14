@@ -2,6 +2,7 @@
 {% block title %}{{ vendor.name }} — admin | {{ brand }}{% endblock %}
 {% block content %}
 <div class="eyebrow"><a href="/admin" style="border:none">Admin</a> · {{ vendor.record_no }}</div>
+{% if vendor.widget_interest %}<div class="mono" style="font-size:10.5px;color:var(--seal);margin:4px 0 0">WANTS THE WEBSITE EMBED — v1.1 trigger list</div>{% endif %}
 <h1>{{ vendor.name }}</h1>
 <p class="sub">{{ vendor.blurb }} {% if vendor.claims|selectattr("state","equalto","confirmed")|list %}· <a href="/r/{{ vendor.slug }}">public record</a>{% endif %}</p>
 

@@ -43,7 +43,11 @@ and nothing negative can ever be recorded.</p>
     <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft)">When you submit, we review and grade each claim against
     <a href="/standard">the published standard</a>, then your client gets a one click confirmation link.
     Nothing publishes unless they confirm it.</p>
-    <button class="btn" type="submit">Submit for review</button>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin:14px 0;font-size:13px;color:var(--ink-soft);text-transform:none;letter-spacing:0;font-weight:500">
+  <input type="checkbox" name="widget_interest" value="yes" style="width:auto;margin-top:3px">
+  <span>I would want to display my verified record on our own website when the embed is ready, replacing unverified testimonials.</span>
+</label>
+<button class="btn" type="submit">Submit for review</button>
   </div>
 </form>
 {% endblock %}

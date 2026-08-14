@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}The register, in numbers — {{ brand }}{% endblock %}
+{% block content %}
+<div class="eyebrow">Transparency</div>
+<h1>The register, in numbers.</h1>
+<p class="sub">Computed live from the register's own database, including the numbers most platforms would not publish. The register is young. The numbers are real.</p>
+<div class="statband">
+  <div class="stat"><div class="num">{{ vendors }}</div><div class="lbl">companies with a live record</div></div>
+  <div class="stat"><div class="num">{{ claims }}</div><div class="lbl">claims countersigned by the client</div></div>
+  <div class="stat"><div class="num">{% if completion is not none %}{{ completion }}%{% else %}—{% endif %}</div><div class="lbl">countersign completion rate</div></div>
+</div>
+<div class="statband" style="margin-top:10px">
+  <div class="stat"><div class="num">{{ corrections }}</div><div class="lbl">corrections requested by clients and processed</div></div>
+  <div class="stat"><div class="num">{{ declined }}</div><div class="lbl">claims declined or not confirmed</div></div>
+  <div class="stat"><div class="num">{{ sentences_declined }}</div><div class="lbl">client sentences declined under the standard</div></div>
+</div>
+<div class="panel" style="margin-top:22px">
+  <div class="mono" style="font-size:10.5px;margin-bottom:8px">Why publish this</div>
+  <p style="font-size:14px;color:var(--ink-soft);margin:0">A register asking to be believed publishes its own workings. Corrections and declined claims are not failures of the register; they are the register working. Register opened August 2026 · United Kingdom · <a href="/standard">The standard is public</a>.</p>
+</div>
+{% endblock %}

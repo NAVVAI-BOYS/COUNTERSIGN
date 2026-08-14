@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% block ogimage %}<meta property="og:image" content="{{ base_url }}/r/{{ vendor.slug }}/card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">{% endblock %}
+{% block ogtitle %}{{ vendor.name }} — countersigned record {{ vendor.record_no }}{% endblock %}
 {% block title %}{{ vendor.name }} — certified record | {{ brand }}{% endblock %}
 {% block content %}
 {% if specimen %}
@@ -39,7 +41,7 @@
       <div style="font-size:12.5px;color:var(--ink-soft)">Identity verified by {{ brand }}, withheld at the client's request · what was checked is listed below</div>
       {% endif %}
     </div>
-    <div class="mono" style="text-align:right">Confirmed<br>{{ c.resolved_at.strftime('%d %b %Y') }}</div>
+    <div class="mono" style="text-align:right">Countersigned<br><span style="font-size:13px;color:var(--navy);font-weight:700">{{ c.resolved_at.strftime('%B %Y') }}</span></div>
   </div>
   {% if c.client_sentence and c.sentence_review == 'approved' %}
   <div style="border-top:1px solid var(--rule-soft);padding:12px 22px;background:var(--wash)">
