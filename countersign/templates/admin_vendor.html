@@ -39,6 +39,7 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <div style="flex:1 1 200px"><label>Grade</label>
         <select name="grade">{% for k, v in grades.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+        <label style="display:flex;gap:7px;align-items:flex-start;margin-top:8px;font-size:12.5px;text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" name="has_outcome" value="yes" style="width:auto;margin-top:2px"> Contains an outcome figure (numbers, results). Displays "what the grade covers" on the record; cannot rise above Client Confirmed until relationship and outcome grade separately.</label>
       </div>
       <div style="flex:1 1 220px"><label>If confirmed privately, describe the client (e.g. "a global technology company")</label><input type="text" name="anon_descriptor"></div>
       <div style="flex:2 1 300px"><label>Evidence checked (one item per line, leave empty for none)</label>

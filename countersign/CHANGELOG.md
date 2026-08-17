@@ -2,6 +2,10 @@
 
 What changed and when, newest at the top. One line per change, no jargon. This is the project's audit trail from day one.
 
+## 17 August 2026
+
+- First version of the grade-object split: claims containing outcome figures are flagged, display 'what the grade covers' on the record (relationship facts graded, outcome figures are the client's confirmation, never audited), carry the flag in their machine readable version, and cannot rise above Client Confirmed until relationship and outcome are graded separately. The standard states the rule.
+
 ## 14 August 2026 (overnight and morning)
 
 - Hero rewritten to hit: 'Your word stopped being proof. Your client's signature still is.' The deal now sits in the hero like a price list: first 100 records free for life, places remaining counted live.

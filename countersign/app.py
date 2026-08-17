@@ -95,6 +95,7 @@ class Claim(db.Model):
     sentence_review = db.Column(db.String(20), default="")      # "", pending, approved, declined
     marketing_opt_in = db.Column(db.Boolean, default=False)     # confirmer consent, captured at confirmation
     standard_version = db.Column(db.String(10), default="")     # standard in force when countersigned
+    has_outcome = db.Column(db.Boolean, default=False)          # claim contains an outcome figure
     sentence_ai_note = db.Column(db.Text, default="")
     token = db.Column(db.String(64), unique=True, nullable=False)
     state = db.Column(db.String(20), default="draft")  # submitted|draft|sent|confirmed|corrected|declined
@@ -632,6 +633,7 @@ def record_json(slug):
         "claims": [{
             "claim_no": c.claim_no,
             "standard_version": c.standard_version or None,
+            "contains_outcome_figures": bool(c.has_outcome),
             "statement": c.text,
             "client": c.client_company if c.show_confirmer else (c.anon_descriptor or "confirmed privately"),
             "grade": c.grade,
@@ -1097,6 +1099,7 @@ def admin_add_claim(vendor_id):
               scope_line=(request.form.get("scope_line") or "").strip(),
               status_line=(request.form.get("status_line") or "").strip(),
               grade=request.form.get("grade", "client_confirmed"),
+        has_outcome=bool(request.form.get("has_outcome")),
               evidence_checked=(request.form.get("evidence_checked") or "").strip(),
               anon_descriptor=(request.form.get("anon_descriptor") or "").strip(),
               token=secrets.token_urlsafe(32))
@@ -1213,6 +1216,16 @@ def admin_invite_handled(invite_id):
     inv.handled = True
     db.session.commit()
     return redirect(url_for("admin_home"))
+
+
+@app.post("/admin/claim/<int:claim_id>/toggle-outcome")
+@admin_required
+def admin_toggle_outcome(claim_id):
+    claim = db.session.get(Claim, claim_id) or abort(404)
+    claim.has_outcome = not claim.has_outcome
+    log_event(claim.id, f"outcome flag set to {claim.has_outcome}")
+    db.session.commit()
+    return redirect(f"/admin/vendor/{claim.vendor_id}")
 
 
 @app.get("/admin/countersigners")
@@ -1374,6 +1387,7 @@ with app.app_context():
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMP WITH TIME ZONE",
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS widget_interest BOOLEAN DEFAULT FALSE",
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS standard_version VARCHAR(10) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS has_outcome BOOLEAN DEFAULT FALSE",
     ]
     from sqlalchemy import text as _sqltext
     for _m in _migrations:

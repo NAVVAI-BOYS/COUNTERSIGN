@@ -20,6 +20,7 @@
     <div style="display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
       <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:17.5px;line-height:1.5;margin:0;flex:1 1 300px">{{ c.text }}</p>
       <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}" tabindex="0" data-tip="{% if c.grade=='fully_verified' %}The named client confirmed the facts, supporting documents were checked, and payment records confirm how long the relationship has run.{% elif c.grade=='evidence_verified' %}The named client confirmed the facts and supporting documents such as contracts were checked.{% else %}The named client confirmed the facts from a company email address. No documents were checked, and the record says so plainly.{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
+      {% if c.has_outcome %}<div class="mono" style="font-size:10px;color:var(--ink-soft);margin-top:6px;max-width:540px">WHAT THE GRADE COVERS — relationship and engagement facts: {{ c.grade_label }}. Outcome figures: the client's confirmation, never audited by the register.</div>{% endif %}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px">
       <tr><td class="mono" style="padding:4px 14px 4px 0;white-space:nowrap">Client</td><td style="padding:4px 0">{{ c.client_company if c.show_confirmer else 'Confirmed privately' }}</td></tr>
