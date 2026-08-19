@@ -22,11 +22,22 @@
       <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}" tabindex="0" data-tip="{% if c.grade=='fully_verified' %}The named client confirmed the facts, supporting documents were checked, and payment records confirm how long the relationship has run.{% elif c.grade=='evidence_verified' %}The named client confirmed the facts and supporting documents such as contracts were checked.{% else %}The named client confirmed the facts from a company email address. No documents were checked, and the record says so plainly.{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
       {% if c.has_outcome %}<div class="mono" style="font-size:10px;color:var(--ink-soft);margin-top:6px;max-width:540px">WHAT THE GRADE COVERS — relationship and engagement facts: {{ c.grade_label }}. Outcome figures: the client's confirmation, never audited by the register.</div>{% endif %}
       {% if c.value_made or c.value_saved or c.value_optimized %}
-      <div style="border-left:3px solid var(--seal);padding:8px 12px;margin-top:10px;background:var(--wash)">
-        <div class="mono" style="font-size:10px;margin-bottom:5px">THE VALUE — CONFIRMED BY THE CLIENT, IN THEIR OWN WORDS{% if vendor.record_no == 'CS-0000' %} (SPECIMEN, ILLUSTRATIVE FIGURES){% endif %}</div>
-        {% if c.value_made %}<p style="margin:0 0 4px;font-size:13.5px"><strong>Made:</strong> {{ c.value_made }}</p>{% endif %}
-        {% if c.value_saved %}<p style="margin:0 0 4px;font-size:13.5px"><strong>Saved:</strong> {{ c.value_saved }}</p>{% endif %}
-        {% if c.value_optimized %}<p style="margin:0;font-size:13.5px"><strong>Optimized:</strong> {{ c.value_optimized }}</p>{% endif %}
+      <div style="margin-top:12px;border-top:2px solid var(--navy);background:var(--wash);padding:10px 14px 12px">
+        <div class="mono" style="font-size:10px;letter-spacing:0.08em;margin-bottom:8px;color:var(--navy)">THE VALUE — CONFIRMED BY THE CLIENT, IN THEIR OWN WORDS{% if vendor.record_no == 'CS-0000' %} (SPECIMEN, ILLUSTRATIVE FIGURES){% endif %}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px">
+          {% if c.value_made %}<div style="border-left:3px solid var(--seal);padding-left:10px">
+            <div class="mono" style="font-size:9.5px;letter-spacing:0.1em;color:var(--seal);margin-bottom:3px">GENERATED</div>
+            <div style="font-size:13.5px;line-height:1.45">{{ c.value_made }}</div>
+          </div>{% endif %}
+          {% if c.value_saved %}<div style="border-left:3px solid var(--seal);padding-left:10px">
+            <div class="mono" style="font-size:9.5px;letter-spacing:0.1em;color:var(--seal);margin-bottom:3px">SAVED</div>
+            <div style="font-size:13.5px;line-height:1.45">{{ c.value_saved }}</div>
+          </div>{% endif %}
+          {% if c.value_optimized %}<div style="border-left:3px solid var(--seal);padding-left:10px">
+            <div class="mono" style="font-size:9.5px;letter-spacing:0.1em;color:var(--seal);margin-bottom:3px">OPTIMIZED</div>
+            <div style="font-size:13.5px;line-height:1.45">{{ c.value_optimized }}</div>
+          </div>{% endif %}
+        </div>
       </div>
       {% endif %}
     </div>
