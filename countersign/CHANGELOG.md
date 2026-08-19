@@ -2,6 +2,15 @@
 
 What changed and when, newest at the top. One line per change, no jargon. This is the project's audit trail from day one.
 
+## 18 August 2026
+
+- Labels corrected on the record: the value block now reads 'the value — confirmed by the client, in their own words' (it is confirmed, and it says so), and the client's free comment reads 'the client's comment — their opinion, in their own words' instead of 'not a verified fact', keeping the honest separation without the register undercutting its own record.
+- The specimen now demonstrates every feature a real record has: standard version stamp on each claim, a working machine readable version, and a working share card, all linked from the record and labelled as the specimen.
+- The example record now shows the value layer: the specimen's lead claim carries made, saved and optimized in the client's words, so every demo shows what Brenda asked for.
+- Narrative softened from replacing the reference call to lowering risk and work: buyers check verified case studies before engaging and know who they would be calling; sellers hand over an ID because collecting references is done for them.
+
+- The value layer, from Brenda Cowie's framework: when a client confirms a claim, they can optionally answer three questions in their own words — what did it make you, what did it save you, what did it optimize (time, money, risk). Answers display on the record as 'the value, in the client's words', written only by the client, treated as outcome figures under the standard, carried in the machine readable record.
+
 ## 17 August 2026
 
 - First version of the grade-object split: claims containing outcome figures are flagged, display 'what the grade covers' on the record (relationship facts graded, outcome figures are the client's confirmation, never audited), carry the flag in their machine readable version, and cannot rise above Client Confirmed until relationship and outcome are graded separately. The standard states the rule.

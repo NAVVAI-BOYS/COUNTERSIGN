@@ -21,6 +21,14 @@
       <p style="font-family:'Poppins',sans-serif;font-weight:500;font-size:17.5px;line-height:1.5;margin:0;flex:1 1 300px">{{ c.text }}</p>
       <span class="grade {% if c.grade=='evidence_verified' %}t2{% elif c.grade=='client_confirmed' %}t3{% endif %}" tabindex="0" data-tip="{% if c.grade=='fully_verified' %}The named client confirmed the facts, supporting documents were checked, and payment records confirm how long the relationship has run.{% elif c.grade=='evidence_verified' %}The named client confirmed the facts and supporting documents such as contracts were checked.{% else %}The named client confirmed the facts from a company email address. No documents were checked, and the record says so plainly.{% endif %}"><span class="dot"></span>{{ c.grade_label }}</span>
       {% if c.has_outcome %}<div class="mono" style="font-size:10px;color:var(--ink-soft);margin-top:6px;max-width:540px">WHAT THE GRADE COVERS — relationship and engagement facts: {{ c.grade_label }}. Outcome figures: the client's confirmation, never audited by the register.</div>{% endif %}
+      {% if c.value_made or c.value_saved or c.value_optimized %}
+      <div style="border-left:3px solid var(--seal);padding:8px 12px;margin-top:10px;background:var(--wash)">
+        <div class="mono" style="font-size:10px;margin-bottom:5px">THE VALUE — CONFIRMED BY THE CLIENT, IN THEIR OWN WORDS{% if vendor.record_no == 'CS-0000' %} (SPECIMEN, ILLUSTRATIVE FIGURES){% endif %}</div>
+        {% if c.value_made %}<p style="margin:0 0 4px;font-size:13.5px"><strong>Made:</strong> {{ c.value_made }}</p>{% endif %}
+        {% if c.value_saved %}<p style="margin:0 0 4px;font-size:13.5px"><strong>Saved:</strong> {{ c.value_saved }}</p>{% endif %}
+        {% if c.value_optimized %}<p style="margin:0;font-size:13.5px"><strong>Optimized:</strong> {{ c.value_optimized }}</p>{% endif %}
+      </div>
+      {% endif %}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px">
       <tr><td class="mono" style="padding:4px 14px 4px 0;white-space:nowrap">Client</td><td style="padding:4px 0">{{ c.client_company if c.show_confirmer else 'Confirmed privately' }}</td></tr>
@@ -46,7 +54,7 @@
   </div>
   {% if c.client_sentence and c.sentence_review == 'approved' %}
   <div style="border-top:1px solid var(--rule-soft);padding:12px 22px;background:var(--wash)">
-    <span class="mono" style="display:block;margin-bottom:4px;font-size:10px">In the client's own words — not a verified fact</span>
+    <span class="mono" style="display:block;margin-bottom:4px;font-size:10px">THE CLIENT'S COMMENT — their opinion, in their own words</span>
     <span style="font-family:'Source Serif 4',serif;font-style:italic;font-size:14.5px">"{{ c.client_sentence }}"</span>
   </div>
   {% endif %}
@@ -95,6 +103,10 @@
 <div class="panel" style="border-color:var(--seal)">
   <div class="mono" style="margin-bottom:6px;color:var(--seal)">This is what your record looks like</div>
   <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft)">Every live record also carries an embeddable badge, a downloadable verified record PDF with a QR code, a machine readable version for AI assistants, and a public challenge route.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin:0 0 14px">
+    <a href="/r/_sample.json">See this specimen's machine readable version</a>
+    <a href="/r/_sample/card.png">See its share card</a>
+  </div>
   <a class="btn" href="/signup">Apply for founding membership</a>
 </div>
 {% else %}

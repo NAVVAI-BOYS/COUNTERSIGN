@@ -96,6 +96,9 @@ class Claim(db.Model):
     marketing_opt_in = db.Column(db.Boolean, default=False)     # confirmer consent, captured at confirmation
     standard_version = db.Column(db.String(10), default="")     # standard in force when countersigned
     has_outcome = db.Column(db.Boolean, default=False)          # claim contains an outcome figure
+    value_made = db.Column(db.String(300), default="")          # client's words: what it made them
+    value_saved = db.Column(db.String(300), default="")         # client's words: what it saved them
+    value_optimized = db.Column(db.String(300), default="")     # client's words: what it optimized
     sentence_ai_note = db.Column(db.Text, default="")
     token = db.Column(db.String(64), unique=True, nullable=False)
     state = db.Column(db.String(20), default="draft")  # submitted|draft|sent|confirmed|corrected|declined
@@ -460,8 +463,7 @@ def ai_read_evidence(ev):
 
 
 # ---------------------------------------------------------------- sample
-@app.get("/sample")
-def sample():
+def _specimen():
     from types import SimpleNamespace as NS
     from datetime import datetime as dt
     vendor = NS(record_no="CS-0000", name="Meridian Data Services",
@@ -475,7 +477,7 @@ def sample():
            relationship_line="Client since January 2024 · 19 months · renewed once",
            scope_line="Data platform migration, pipeline operations",
            status_line="Ongoing", grade="fully_verified",
-           grade_label="Fully Verified",
+           grade_label="Fully Verified", standard_version="1.0",
            evidence_items=["Signed master services agreement, dated January 2024",
                            "Invoice history showing 19 consecutive months of payments",
                            "Renewal recorded January 2025"],
@@ -483,30 +485,42 @@ def sample():
            confirmer_name="Sarah Whitmore", confirmer_role="Chief Operating Officer",
            confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 1),
            client_sentence="Meridian took over a migration two previous suppliers had failed to land, and the pipelines have run without an incident since.",
-           sentence_review="approved"),
+           sentence_review="approved",
+           has_outcome=True,
+           value_made="31 qualified pipeline reports a month, delivered without a single missed cycle",
+           value_saved="Roughly £40,000 a year against our previous supplier",
+           value_optimized="Cut our month-end data close from five days to two"),
         NS(claim_no="CS-0000-02",
+           has_outcome=False, value_made="", value_saved="", value_optimized="",
            text="Meridian delivered a reporting automation project that the client operates independently today.",
            client_company="",
            relationship_line="Project completed March 2026",
            scope_line="Reporting automation", status_line="Completed",
-           grade="evidence_verified", grade_label="Evidence Verified",
+           grade="evidence_verified", grade_label="Evidence Verified", standard_version="1.0",
            evidence_items=["Statement of work, dated November 2025",
                            "Project completion sign off, March 2026"],
            show_confirmer=False, anon_descriptor="a national retail group",
            confirmer_name="", confirmer_role="", confirmer_linkedin="",
            resolved_at=dt(2026, 7, 14), client_sentence="", sentence_review=""),
         NS(claim_no="CS-0000-03",
+           has_outcome=False, value_made="", value_saved="", value_optimized="",
            text="Meridian provides ad hoc data advisory to Bright & Co Accountants.",
            client_company="Bright & Co Accountants",
            relationship_line="Client since May 2026",
            scope_line="Data advisory", status_line="Ongoing",
-           grade="client_confirmed", grade_label="Client Confirmed",
+           grade="client_confirmed", grade_label="Client Confirmed", standard_version="1.0",
            evidence_items=[],
            show_confirmer=True, anon_descriptor="",
            confirmer_name="James Bright", confirmer_role="Managing Partner",
            confirmer_linkedin="https://www.linkedin.com/", resolved_at=dt(2026, 8, 9),
            client_sentence="", sentence_review=""),
     ]
+    return vendor, claims
+
+
+@app.get("/sample")
+def sample():
+    vendor, claims = _specimen()
     return render_template("proof.html", brand=BRAND, vendor=vendor,
                            claims=claims, grades=GRADES, specimen=True, base_url=BASE_URL)
 
@@ -556,11 +570,14 @@ def proof_event(slug, kind):
 
 @app.get("/r/<slug>/card.png")
 def share_card(slug):
-    vendor = Vendor.query.filter_by(slug=slug).first_or_404()
-    claims = [c for c in vendor.claims if c.state == "confirmed"]
-    if not claims:
-        abort(404)
-    _track(vendor, "card")
+    if slug == "_sample":
+        vendor, claims = _specimen()
+    else:
+        vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+        claims = [c for c in vendor.claims if c.state == "confirmed"]
+        if not claims:
+            abort(404)
+        _track(vendor, "card")
     from PIL import Image, ImageDraw, ImageFont
     NAVY = (22, 37, 78); ICE = (245, 247, 252); MAROON = (108, 29, 69)
     SOFT = (176, 186, 214); RULE = (58, 76, 122)
@@ -618,11 +635,14 @@ def share_card(slug):
 
 @app.get("/r/<slug>.json")
 def record_json(slug):
-    vendor = Vendor.query.filter_by(slug=slug).first_or_404()
-    _track(vendor, "json")
-    claims = [c for c in vendor.claims if c.state == "confirmed"]
-    if not claims:
-        abort(404)
+    if slug == "_sample":
+        vendor, claims = _specimen()
+    else:
+        vendor = Vendor.query.filter_by(slug=slug).first_or_404()
+        _track(vendor, "json")
+        claims = [c for c in vendor.claims if c.state == "confirmed"]
+        if not claims:
+            abort(404)
     return {
         "register": BRAND,
         "record": vendor.record_no,
@@ -634,6 +654,9 @@ def record_json(slug):
             "claim_no": c.claim_no,
             "standard_version": c.standard_version or None,
             "contains_outcome_figures": bool(c.has_outcome),
+            "value_in_clients_words": ({"made": c.value_made or None, "saved": c.value_saved or None,
+                                        "optimized": c.value_optimized or None}
+                                       if (c.value_made or c.value_saved or c.value_optimized) else None),
             "statement": c.text,
             "client": c.client_company if c.show_confirmer else (c.anon_descriptor or "confirmed privately"),
             "grade": c.grade,
@@ -820,6 +843,11 @@ def confirm_submit(token):
         claim.confirmer_role = role
         claim.marketing_opt_in = bool(request.form.get("marketing_opt_in"))
         claim.standard_version = STANDARD_VERSION
+        claim.value_made = (request.form.get("value_made") or "").strip()[:300]
+        claim.value_saved = (request.form.get("value_saved") or "").strip()[:300]
+        claim.value_optimized = (request.form.get("value_optimized") or "").strip()[:300]
+        if claim.value_made or claim.value_saved or claim.value_optimized:
+            claim.has_outcome = True
         claim.client_sentence = (request.form.get("client_sentence") or "").strip()[:400]
         if claim.client_sentence:
             claim.sentence_review = "pending"
@@ -1388,6 +1416,9 @@ with app.app_context():
         "ALTER TABLE vendor ADD COLUMN IF NOT EXISTS widget_interest BOOLEAN DEFAULT FALSE",
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS standard_version VARCHAR(10) DEFAULT ''",
         "ALTER TABLE claim ADD COLUMN IF NOT EXISTS has_outcome BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS value_made VARCHAR(300) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS value_saved VARCHAR(300) DEFAULT ''",
+        "ALTER TABLE claim ADD COLUMN IF NOT EXISTS value_optimized VARCHAR(300) DEFAULT ''",
     ]
     from sqlalchemy import text as _sqltext
     for _m in _migrations:
